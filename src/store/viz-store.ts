@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { EMPTY_NOTE, note } from "@/lib/celestial/loc-note";
 import type { VizSnapshot } from "@/lib/celestial/types";
 
 const quietBand = {
@@ -30,13 +31,13 @@ export const initialSnapshot: VizSnapshot = {
   selectedCount: 0,
   canCreate: false,
   hiRes: true,
-  hiResNote: "Fetching ultra maps…",
+  hiResNote: note("maps.fetching"),
   autoOrbit: false,
   autoOrbitSpeed: 0.5,
   autoOrbitDir: "ccw",
   recording: false,
   recordElapsed: 0,
-  recordNote: "",
+  recordNote: EMPTY_NOTE,
   recordFormat: "",
   videoAspect: "16:9",
   videoQuality: "1080",
@@ -56,7 +57,7 @@ export const initialSnapshot: VizSnapshot = {
     rhythmMode: "advanced",
     autoMix: true,
     mixStatus: "idle",
-    mixNote: "",
+    mixNote: EMPTY_NOTE,
     mixVoice: "",
     bands: {
       bass: { ...quietBand, sensitivity: 1.8 },

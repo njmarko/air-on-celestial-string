@@ -20,6 +20,7 @@ import { Sun } from "./sun";
 import { fetchHiResMaps } from "./texture-hd";
 import type { TexturePack } from "./texture-pack";
 import { createSkyTexture } from "./textures";
+import { EMPTY_NOTE, note, type LocNote } from "./loc-note";
 import type {
   BackgroundType,
   BodyRow,
@@ -76,12 +77,12 @@ export class SceneManager {
   private basePack: TexturePack | null;
   private hiPack: TexturePack | null = null;
   hiRes = true;
-  hiResNote = "Fetching ultra maps…";
+  hiResNote: LocNote = note("maps.fetching");
   autoOrbit = false;
   autoOrbitSpeed = 0.5;
   autoOrbitDir: OrbitDir = "ccw";
   recording = false;
-  recordNote = "";
+  recordNote: LocNote = EMPTY_NOTE;
   videoAspect: VideoAspect = "16:9";
   videoQuality: VideoQuality = "1080";
   private hiResBusy = false;
@@ -448,7 +449,7 @@ export class SceneManager {
       this.ultraAbort = null;
       this.hiResBusy = false;
       this.hiRes = false;
-      this.hiResNote = "2K maps";
+      this.hiResNote = note("maps.twoK");
       this.pack = this.basePack;
       this.applyCurrentPack();
       try {
@@ -463,7 +464,7 @@ export class SceneManager {
       this.hiRes = true;
       this.pack = this.hiPack;
       this.applyCurrentPack();
-      this.hiResNote = "Ultra maps · Solar System Scope";
+      this.hiResNote = note("maps.ready");
       try {
         localStorage.setItem("viz-hires", "1");
       } catch {
@@ -475,7 +476,7 @@ export class SceneManager {
 
     this.hiResBusy = true;
     this.hiRes = true;
-    this.hiResNote = "Fetching ultra maps…";
+    this.hiResNote = note("maps.fetching");
     try {
       localStorage.setItem("viz-hires", "1");
     } catch {
@@ -514,31 +515,47 @@ export class SceneManager {
       for await (const step of fetchHiResMaps(maxSize, signal)) {
         if (this.disposed || signal.aborted) return;
         if (step.phase === "start") {
-          this.hiResNote = `Fetching ${step.done + 1}/${step.total} · ${step.label}`;
+          this.hiResNote = note("maps.fetchingItem", {
+            n: step.done + 1,
+            total: step.total,
+            map: step.key,
+          });
           continue;
         }
         if (step.phase !== "ok" || !step.tex) {
-          this.hiResNote = `Ultra ${step.done}/${step.total} · ${step.label} skipped`;
+          this.hiResNote = note("maps.skipped", {
+            n: step.done,
+            total: step.total,
+            map: step.key,
+          });
           continue;
         }
         const current = maps[step.key];
         if (current && current !== fallback.maps[step.key]) {
           step.tex.dispose();
           applied += 1;
-          this.hiResNote = `Ultra ${step.done}/${step.total} · ${step.label}`;
+          this.hiResNote = note("maps.ultraItem", {
+            n: step.done,
+            total: step.total,
+            map: step.key,
+          });
           continue;
         }
         maps[step.key] = step.tex;
         this.applyMapKey(step.key);
         applied += 1;
-        this.hiResNote = `Ultra ${step.done}/${step.total} · ${step.label}`;
+        this.hiResNote = note("maps.ultraItem", {
+          n: step.done,
+          total: step.total,
+          map: step.key,
+        });
       }
       if (this.disposed || signal.aborted) return;
-      this.hiResNote = applied > 0 ? "Ultra maps · Solar System Scope" : "Ultra maps unavailable — 2K";
+      this.hiResNote = applied > 0 ? note("maps.ready") : note("maps.unavailable");
       this.ultraComplete = applied > 0;
     } catch {
       if (signal.aborted || this.disposed) return;
-      this.hiResNote = applied > 0 ? "Ultra maps · Solar System Scope" : "Ultra download failed — 2K";
+      this.hiResNote = applied > 0 ? note("maps.ready") : note("maps.failed");
     } finally {
       this.hiResBusy = false;
     }
@@ -553,7 +570,7 @@ export class SceneManager {
     }
     if (!prefer) {
       this.hiRes = false;
-      this.hiResNote = "2K maps";
+      this.hiResNote = note("maps.twoK");
       return;
     }
     void this.setHiRes(true);
@@ -688,7 +705,7 @@ export class SceneManager {
     const ok = session.start(this.renderer.domElement, this.audio.captureStream(), width, height, 30);
     if (!ok) {
       this.restoreExportFrame();
-      this.recordNote = session.note || "This browser cannot record video.";
+      this.recordNote = session.note.key ? session.note : note("record.noSupport");
       return;
     }
     this.capture = session;
@@ -705,12 +722,12 @@ export class SceneManager {
     if (!session) return;
     const result = await session.stop();
     if (!result) {
-      this.recordNote = "Nothing was captured.";
+      this.recordNote = note("record.nothing");
       return;
     }
     const name = stampFilename(result.ext, this.audio.trackName);
     downloadBlob(result.blob, name);
-    this.recordNote = `Saved ${name}`;
+    this.recordNote = note("record.saved", { name });
   }
 
   zoomBy(factor: number): void {

@@ -1,11 +1,26 @@
 import { useState } from "react";
 import { ListMusic, Orbit, Pause, Play, Video, Volume2, VolumeX } from "lucide-react";
-import { act } from "@/lib/viz-actions";
 import { formatTime } from "@/lib/utils";
+import { act } from "@/lib/viz-actions";
+import { useT } from "@/i18n/use-i18n";
 import { useVizStore } from "@/store/viz-store";
 import { ExportFields } from "./export";
 import { TrackList } from "./track-list";
 import { IconBtn } from "./widgets";
+
+function trackLabel(
+  t: ReturnType<typeof useT>,
+  trackId: string,
+  trackName: string,
+): string {
+  if (!trackId) return t("track.none");
+  if (trackId === "file") return trackName;
+  if (trackId === "generated") return t("track.generated");
+  const title = t(`track.${trackId}.title`);
+  const composer = t(`track.${trackId}.composer`);
+  if (title.startsWith("track.")) return trackName;
+  return `${title} — ${composer}`;
+}
 
 export function Transport({
   onOpenFile,
@@ -14,6 +29,7 @@ export function Transport({
   onOpenFile: () => void;
   onOpenSheet: () => void;
 }) {
+  const t = useT();
   const audio = useVizStore((s) => s.audio);
   const paused = useVizStore((s) => s.paused);
   const canCreate = useVizStore((s) => s.canCreate);
@@ -24,6 +40,7 @@ export function Transport({
 
   const progress = audio.duration > 0 ? audio.current / audio.duration : 0;
   const muted = audio.muted || audio.volume <= 0.001;
+  const name = trackLabel(t, audio.trackId, audio.trackName);
 
   return (
     <footer className="pointer-events-auto relative w-full max-w-3xl">
@@ -49,7 +66,7 @@ export function Transport({
 
       {exportOpen && !recording ? (
         <div className="panel absolute inset-x-0 bottom-full z-30 mb-2 rounded-2xl p-3">
-          <p className="mb-2 px-1 font-display text-lg text-fg">Export video</p>
+          <p className="mb-2 px-1 font-display text-lg text-fg">{t("record.videoTitle")}</p>
           <ExportFields onStart={() => setExportOpen(false)} />
         </div>
       ) : null}
@@ -57,8 +74,8 @@ export function Transport({
       <div className="panel rounded-2xl px-2 py-2 md:px-3">
         <div className="flex items-center gap-1 md:gap-2">
           <IconBtn
-            label={audio.playing ? "Pause" : "Play"}
-            hint={audio.playing ? "Pause the recording. Space also toggles." : "Play the recording. Space also toggles."}
+            label={audio.playing ? t("player.pause") : t("player.play")}
+            hint={audio.playing ? t("player.pauseHint") : t("player.playHint")}
             onClick={() =>
               act((engine) => {
                 if (!engine.audio.hasTrack) engine.loadDemo();
@@ -75,7 +92,7 @@ export function Transport({
 
           <div className="min-w-0 flex-1 px-1">
             <div className="flex items-baseline justify-between gap-3">
-              <p className="truncate text-sm text-fg">{audio.trackName}</p>
+              <p className="truncate text-sm text-fg">{name}</p>
               <p className="shrink-0 font-mono text-xs tabular-nums text-faint">
                 {formatTime(audio.current)} / {formatTime(audio.duration)}
               </p>
@@ -88,15 +105,15 @@ export function Transport({
               step={0.001}
               value={progress}
               disabled={!audio.hasTrack}
-              aria-label="Seek"
-              data-hint="Scrub the recording. Mix sliders follow the section under the playhead."
+              aria-label={t("player.seek")}
+              data-hint={t("player.seekHint")}
               onChange={(event) => act((engine) => engine.seekAudio(Number(event.target.value)))}
             />
           </div>
 
           <IconBtn
-            label={muted ? "Unmute" : "Mute"}
-            hint={muted ? "Unmute the recording." : "Mute the recording. The speaker also toggles mute."}
+            label={muted ? t("player.unmute") : t("player.mute")}
+            hint={muted ? t("player.unmuteHint") : t("player.muteHint")}
             className="size-9"
             active={muted}
             onClick={() => act((engine) => engine.toggleMute())}
@@ -114,14 +131,14 @@ export function Transport({
             max={1}
             step={0.01}
             value={audio.volume}
-            aria-label="Volume"
-            data-hint="Playback volume."
+            aria-label={t("player.volume")}
+            data-hint={t("player.volumeHint")}
             onChange={(event) => act((engine) => engine.setVolume(Number(event.target.value)))}
           />
 
           <IconBtn
-            label="Choose a track"
-            hint="Pick a public-domain recording or add your own."
+            label={t("player.library")}
+            hint={t("player.libraryHint")}
             active={libraryOpen}
             onClick={() => {
               setExportOpen(false);
@@ -131,16 +148,16 @@ export function Transport({
             <ListMusic className="size-4" strokeWidth={1.75} />
           </IconBtn>
           <IconBtn
-            label={paused ? "Resume orbits" : "Pause orbits"}
-            hint={paused ? "Let the planets move again. Music keeps playing." : "Freeze planetary motion. Music still plays."}
+            label={paused ? t("player.resumeOrbits") : t("player.pauseOrbits")}
+            hint={paused ? t("player.resumeOrbitsHint") : t("player.pauseOrbitsHint")}
             active={paused}
             onClick={() => act((engine) => engine.togglePaused())}
           >
             <Orbit className="size-4" strokeWidth={1.75} />
           </IconBtn>
           <IconBtn
-            label="Export video"
-            hint="Record the sky and the music. Menus and the cursor stay out of the file. You can drag the camera while it records."
+            label={t("player.export")}
+            hint={t("record.exportHint")}
             active={exportOpen || recording}
             className="hidden md:inline-flex"
             onClick={() => {
@@ -153,10 +170,10 @@ export function Transport({
           <button
             type="button"
             onClick={onOpenSheet}
-            data-hint="Open worlds, strings, and mix on a small screen."
+            data-hint={t("hud.tuneHint")}
             className="inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted hover:bg-fg/10 hover:text-fg lg:hidden"
           >
-            Tune
+            {t("hud.tune")}
           </button>
         </div>
 
@@ -164,19 +181,19 @@ export function Transport({
           <div className="mt-1 flex items-center justify-between gap-3 px-2 pb-1">
             <p className="text-xs text-muted">
               {canCreate
-                ? "Two worlds selected"
+                ? t("strings.twoSelected")
                 : selectedCount === 1
-                  ? "Select a second world"
-                  : `${selectedCount} selected`}
+                  ? t("strings.pickSecond")
+                  : t("strings.nSelected", { n: selectedCount })}
             </p>
             <button
               type="button"
               disabled={!canCreate}
-              data-hint="Stretch a glowing string between the two selected worlds."
+              data-hint={t("strings.weaveHint")}
               onClick={() => act((engine) => engine.createConnection())}
               className="h-9 rounded-md bg-fg px-3 text-xs font-medium text-bg disabled:opacity-40"
             >
-              Weave string
+              {t("strings.weaveShort")}
             </button>
           </div>
         )}

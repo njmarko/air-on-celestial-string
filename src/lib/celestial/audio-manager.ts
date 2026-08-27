@@ -2,6 +2,7 @@ import type { Connection } from "./connection";
 import { createDemoTrackBlob } from "./demo-track";
 import { libraryTrack } from "./library";
 import { analyzeMixBuffer, sectionAt, type MixProfile } from "./mix-analyzer";
+import { EMPTY_NOTE, note, type LocNote } from "./loc-note";
 import { hzForPreset } from "./planet-data";
 import { formatTime } from "@/lib/utils";
 import type { MixStatus, RhythmBand, RhythmMode } from "./types";
@@ -53,7 +54,7 @@ export class AudioManager {
   hasTrack = false;
   autoMix = true;
   mixStatus: MixStatus = "idle";
-  mixNote = "";
+  mixNote: LocNote = EMPTY_NOTE;
   mixVoice = "";
   mixIndex = 0;
   locked: Record<BandKey, boolean> = { bass: false, mid: false, high: false };
@@ -235,7 +236,7 @@ export class AudioManager {
       this.followMix(this.audio.currentTime || 0, true);
       return;
     }
-    this.mixNote = this.mixStatus === "live" ? "Auto mix off — sliders stay put." : this.mixNote;
+    this.mixNote = this.mixStatus === "live" ? note("mixNote.off") : this.mixNote;
   }
 
   lockBand(band: BandKey): void {
@@ -515,11 +516,11 @@ export class AudioManager {
     const src = this.audio.src;
     if (!src) {
       this.mixStatus = "idle";
-      this.mixNote = "";
+      this.mixNote = EMPTY_NOTE;
       return;
     }
     this.mixStatus = "analyzing";
-    this.mixNote = "Reading the recording for bass, mids, and treble…";
+    this.mixNote = note("mixNote.analyzing");
     const abort = new AbortController();
     this.mixAbort = abort;
     void this.runAnalysis(src, abort.signal);
@@ -537,31 +538,41 @@ export class AudioManager {
     } catch (error) {
       if (signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
       this.mixStatus = "failed";
-      this.mixNote = "Could not analyse this file — sliders stay manual.";
+      this.mixNote = note("mixNote.failed");
       this.mixProfile = null;
     }
   }
 
   private refreshMixNote(): void {
     if (!this.autoMix) {
-      this.mixNote = this.mixStatus === "live" ? "Auto mix off — sliders stay put." : this.mixNote;
+      this.mixNote = this.mixStatus === "live" ? note("mixNote.off") : this.mixNote;
       return;
     }
     if (this.mixStatus === "analyzing") {
-      this.mixNote = "Reading the recording for bass, mids, and treble…";
+      this.mixNote = note("mixNote.analyzing");
       return;
     }
     if (this.mixStatus !== "live" || !this.mixProfile) return;
     const section = this.mixProfile.sections[this.mixIndex];
     if (!section) {
-      this.mixNote = "Auto mix ready.";
+      this.mixNote = note("mixNote.ready");
       return;
     }
     const n = this.mixProfile.sections.length;
     const span = `${formatTime(section.start)}–${formatTime(section.end)}`;
     const lockedCount = BANDS.filter((key) => this.locked[key]).length;
-    const lockBit = lockedCount === 3 ? " · all bands locked" : lockedCount ? ` · ${lockedCount} locked` : "";
-    this.mixNote = `Section ${this.mixIndex + 1} of ${n} · ${span}${lockBit}`;
+    if (lockedCount === 3) {
+      this.mixNote = note("mixNote.sectionAllLocked", { n: this.mixIndex + 1, total: n, span });
+    } else if (lockedCount) {
+      this.mixNote = note("mixNote.sectionLocked", {
+        n: this.mixIndex + 1,
+        total: n,
+        span,
+        locked: lockedCount,
+      });
+    } else {
+      this.mixNote = note("mixNote.section", { n: this.mixIndex + 1, total: n, span });
+    }
     this.mixVoice = section.voice;
   }
 

@@ -1,22 +1,11 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { L as require_react, v as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
 import { _ as ListMusic, a as Upload, c as Square, d as Pause, f as Orbit, g as Lock, h as Maximize2, i as Video, l as Plus, m as Minus, n as VolumeX, p as Music, r as Volume2, s as Trash2, t as X, u as Play, v as Eye, y as EyeOff } from "../_libs/lucide-react.mjs";
+import { t as create } from "../_libs/zustand.mjs";
+import { a as hydrateLocale, c as useT, i as htmlLangFor, l as LANGUAGES, n as bodyName, o as useLocale, r as formatNote, s as useLocaleStore, u as __exportAll } from "./router-fV0YK9ce.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-import { t as create } from "../_libs/zustand.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/rolldown-runtime-D7D4PA-g.js
-var __defProp = Object.defineProperty;
-var __exportAll = (all, no_symbols) => {
-	let target = {};
-	for (var name in all) __defProp(target, name, {
-		get: all[name],
-		enumerable: true
-	});
-	if (!no_symbols) __defProp(target, Symbol.toStringTag, { value: "Module" });
-	return target;
-};
-//#endregion
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-BGbhVVEv.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-e8d26f-f.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -59,6 +48,13 @@ var LIBRARY = [
 ];
 function libraryTrack(id) {
 	return LIBRARY.find((track) => track.id === id);
+}
+var EMPTY_NOTE = { key: "" };
+function note(key, vars) {
+	return vars ? {
+		key,
+		vars
+	} : { key };
 }
 function cn(...inputs) {
 	return twMerge(clsx(inputs));
@@ -194,25 +190,25 @@ var CaptureSession = class {
 	startedAt = 0;
 	ext = "mp4";
 	mime = "";
-	note = "";
+	note = EMPTY_NOTE;
 	recorder = null;
 	chunks = [];
 	canvasStream = null;
 	start(canvas, audioStream, width, height, fps = 30) {
 		if (typeof MediaRecorder === "undefined") {
-			this.note = "This browser cannot record video.";
+			this.note = note("record.noSupport");
 			return false;
 		}
 		let canvasStream;
 		try {
 			canvasStream = canvas.captureStream(fps);
 		} catch {
-			this.note = "Could not capture the sky — the canvas is protected.";
+			this.note = note("record.canvasProtected");
 			return false;
 		}
 		const videoTrack = canvasStream.getVideoTracks()[0];
 		if (!videoTrack) {
-			this.note = "Could not capture the sky.";
+			this.note = note("record.noSky");
 			return false;
 		}
 		if ("contentHint" in videoTrack) videoTrack.contentHint = "detail";
@@ -222,7 +218,7 @@ var CaptureSession = class {
 		const recorder = createRecorder(mixed, width, height, mixed.getAudioTracks().length > 0);
 		if (!recorder) {
 			videoTrack.stop();
-			this.note = "This browser cannot record video.";
+			this.note = note("record.noSupport");
 			return false;
 		}
 		this.canvasStream = canvasStream;
@@ -230,7 +226,7 @@ var CaptureSession = class {
 		this.chunks = [];
 		this.ext = mimeExt(recorder.mimeType);
 		this.mime = recorder.mimeType || (this.ext === "mp4" ? "video/mp4" : "video/webm");
-		this.note = this.ext === "mp4" ? "MP4" : "WebM — this browser encodes WebM, not MP4";
+		this.note = this.ext === "mp4" ? note("record.formatMp4") : note("record.formatWebm");
 		this.startedAt = performance.now();
 		this.running = true;
 		recorder.ondataavailable = (event) => {
@@ -242,7 +238,7 @@ var CaptureSession = class {
 		} catch {
 			this.cleanupTracks();
 			this.running = false;
-			this.note = "Could not start the recorder.";
+			this.note = note("record.startFailed");
 			return false;
 		}
 		return true;
@@ -349,13 +345,13 @@ var initialSnapshot = {
 	selectedCount: 0,
 	canCreate: false,
 	hiRes: true,
-	hiResNote: "Fetching ultra maps…",
+	hiResNote: note("maps.fetching"),
 	autoOrbit: false,
 	autoOrbitSpeed: .5,
 	autoOrbitDir: "ccw",
 	recording: false,
 	recordElapsed: 0,
-	recordNote: "",
+	recordNote: EMPTY_NOTE,
 	recordFormat: "",
 	videoAspect: "16:9",
 	videoQuality: "1080",
@@ -375,7 +371,7 @@ var initialSnapshot = {
 		rhythmMode: "advanced",
 		autoMix: true,
 		mixStatus: "idle",
-		mixNote: "",
+		mixNote: EMPTY_NOTE,
 		mixVoice: "",
 		bands: {
 			bass: {
@@ -395,12 +391,13 @@ var initialSnapshot = {
 };
 var useVizStore = create(() => initialSnapshot);
 if (typeof document !== "undefined") {
-	import("./scene-manager-Bl42Kj7_.mjs");
+	import("./scene-manager-BDJVJ-qU.mjs");
 	import("./texture-pack-BaRlWae6.mjs").then((n) => n.n).then((m) => m.prefetchTexturePack());
 }
 function VizCanvas() {
 	const hostRef = (0, import_react.useRef)(null);
 	const [failed, setFailed] = (0, import_react.useState)(false);
+	const t = useT();
 	(0, import_react.useEffect)(() => {
 		const host = hostRef.current;
 		if (!host) return;
@@ -409,7 +406,7 @@ function VizCanvas() {
 		let last = 0;
 		let dispose = null;
 		const mobile = (host.clientWidth || window.innerWidth) < 700;
-		Promise.all([import("./scene-manager-Bl42Kj7_.mjs"), import("./texture-pack-BaRlWae6.mjs").then((n) => n.n).then((m) => m.loadTexturePack(mobile))]).then(([{ SceneManager }, pack]) => {
+		Promise.all([import("./scene-manager-BDJVJ-qU.mjs"), import("./texture-pack-BaRlWae6.mjs").then((n) => n.n).then((m) => m.loadTexturePack(mobile))]).then(([{ SceneManager }, pack]) => {
 			if (cancelled || !host) {
 				pack.dispose();
 				return;
@@ -445,7 +442,7 @@ function VizCanvas() {
 		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			ref: hostRef,
 			className: "absolute inset-0 bg-bg",
-			"data-hint": "Click a world to select it. Two selected worlds can be woven into a string. Drag to orbit the camera.",
+			"data-hint": t("canvas.hint"),
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("canvas", {
 				className: "block h-full w-full",
 				"aria-hidden": "true"
@@ -456,10 +453,108 @@ function VizCanvas() {
 			className: "absolute inset-0 z-20 flex items-center justify-center bg-bg px-6 text-center",
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "max-w-sm text-sm text-muted",
-				children: "This visualizer needs WebGL. Try another browser, or turn on hardware acceleration."
+				children: t("canvas.webgl")
 			})
 		}) : null
 	] });
+}
+function Flag({ code, className }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+		viewBox: "0 0 21 15",
+		className,
+		"aria-hidden": "true",
+		focusable: "false",
+		children: code === "gb" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UnionJack, {}) : code === "rs" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Serbia, {}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Unknown, {})
+	});
+}
+function Unknown() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+		width: "21",
+		height: "15",
+		fill: "#2a3140"
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+		x: "2",
+		y: "2",
+		width: "17",
+		height: "11",
+		fill: "none",
+		stroke: "#8b96a8",
+		strokeWidth: "1"
+	})] });
+}
+function UnionJack() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			width: "21",
+			height: "15",
+			fill: "#012169"
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			d: "M0 0 L21 15 M21 0 L0 15",
+			stroke: "#fff",
+			strokeWidth: "3"
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			d: "M0 0 L21 15 M21 0 L0 15",
+			stroke: "#c8102e",
+			strokeWidth: "1.4"
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			d: "M10.5 0 V15 M0 7.5 H21",
+			stroke: "#fff",
+			strokeWidth: "5"
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			d: "M10.5 0 V15 M0 7.5 H21",
+			stroke: "#c8102e",
+			strokeWidth: "3"
+		})
+	] });
+}
+function Serbia() {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			width: "21",
+			height: "15",
+			fill: "#c6363c"
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			y: "5",
+			width: "21",
+			height: "5",
+			fill: "#0c4076"
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			y: "10",
+			width: "21",
+			height: "5",
+			fill: "#fff"
+		})
+	] });
+}
+function LanguagePicker({ compact = false, className }) {
+	const locale = useLocaleStore((s) => s.locale);
+	const setLocale = useLocaleStore((s) => s.setLocale);
+	const t = useT();
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		role: "group",
+		"aria-label": t("lang.label"),
+		className: cn("flex flex-wrap items-center gap-1", className),
+		children: LANGUAGES.map((lang) => {
+			const on = locale === lang.id;
+			return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				"aria-pressed": on,
+				"data-hint": t("lang.switch", { name: lang.nativeName }),
+				onClick: () => setLocale(lang.id),
+				className: cn("inline-flex items-center gap-2 rounded-md px-2.5 text-xs font-medium transition-colors duration-150", compact ? "h-9" : "h-10", on ? "bg-fg text-bg" : "bg-fg/10 text-muted hover:text-fg"),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Flag, {
+					code: lang.flag,
+					className: "h-3.5 w-5 shrink-0 rounded-[2px] shadow-[0_0_0_1px_#e8eef633]"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: lang.nativeName })]
+			}, lang.id);
+		})
+	});
 }
 function pushSnapshot() {
 	if (engine) useVizStore.setState(engine.snapshot());
@@ -472,6 +567,281 @@ function act(fn) {
 function isAudioFile(file) {
 	if (file.type.startsWith("audio/")) return true;
 	return /\.(mp3|wav|ogg|flac|m4a|aac|webm|opus)$/i.test(file.name);
+}
+function IconBtn({ label, hint, onClick, active, disabled, children, className }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+		type: "button",
+		"aria-label": label,
+		"data-hint": hint ?? label,
+		disabled,
+		onClick,
+		className: cn("inline-flex size-11 shrink-0 items-center justify-center rounded-md text-fg", "transition-colors duration-150", "hover:bg-fg/10 disabled:pointer-events-none disabled:opacity-40", active && "bg-fg/10 text-primary", className),
+		children
+	});
+}
+function Panel({ title, children, className }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		className: cn("panel rounded-2xl p-3", className),
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+			className: "mb-3 px-1 font-display text-lg font-medium tracking-tight text-fg",
+			children: title
+		}), children]
+	});
+}
+function RangeField({ label, hint, value, min, max, step, onChange, display }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+		className: "block py-1",
+		"data-hint": hint ?? label,
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+			className: "mb-2 flex items-baseline justify-between gap-3 text-xs",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "text-muted",
+				children: label
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "tabular-nums text-faint",
+				children: display ?? value
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+			type: "range",
+			className: "hud-range",
+			min,
+			max,
+			step,
+			value,
+			"aria-label": label,
+			onChange: (event) => onChange(Number(event.target.value))
+		})]
+	});
+}
+function Segmented({ label, hint, value, options, onChange }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "py-1",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "mb-2 text-xs text-muted",
+			children: label
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "flex rounded-lg bg-surface-2 p-1",
+			children: options.map((option) => {
+				const selected = option.id === value;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					"data-hint": option.hint ?? hint ?? `${label}: ${option.label}`,
+					onClick: () => onChange(option.id),
+					className: cn("h-9 min-w-0 flex-1 rounded-md px-2 text-xs font-medium transition-colors duration-150", selected ? "bg-fg text-bg" : "text-muted hover:text-fg"),
+					children: option.label
+				}, option.id);
+			})
+		})]
+	});
+}
+function ToggleRow({ label, hint, checked, onChange }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		type: "button",
+		role: "switch",
+		"aria-checked": checked,
+		"data-hint": hint ?? label,
+		onClick: () => onChange(!checked),
+		className: "flex h-11 w-full items-center justify-between rounded-lg px-2 text-sm text-fg hover:bg-fg/10",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+			className: cn("relative h-6 w-10 rounded-full p-0.5 transition-colors duration-150", checked ? "bg-primary" : "bg-fg/15"),
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: cn("block size-5 rounded-full transition-transform duration-150", checked ? "translate-x-4 bg-primary-fg" : "translate-x-0 bg-fg") })
+		})]
+	});
+}
+function MakerCredit({ className }) {
+	const t = useT();
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+		className: cn("text-xs tracking-wide text-muted", className),
+		children: [
+			t("credit.madeBy"),
+			" Marko Njegomir",
+			" ",
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+				href: "https://x.com/njmarko",
+				target: "_blank",
+				rel: "noopener noreferrer",
+				"data-hint": t("credit.handleHint"),
+				className: "inline-flex h-6 items-center text-fg underline decoration-border-strong underline-offset-2 transition-colors duration-150 hover:text-primary hover:decoration-primary",
+				children: "@njmarko"
+			}),
+			" ",
+			t("credit.withGrok")
+		]
+	});
+}
+var ASPECT_HINT = {
+	"16:9": "record.aspect169",
+	"9:16": "record.aspect916",
+	"1:1": "record.aspect11",
+	"4:3": "record.aspect43"
+};
+var QUALITY_HINT = {
+	"720": "record.q720",
+	"1080": "record.q1080",
+	"1440": "record.q1440"
+};
+function ExportFields({ onStart }) {
+	const t = useT();
+	const aspect = useVizStore((s) => s.videoAspect);
+	const quality = useVizStore((s) => s.videoQuality);
+	const recording = useVizStore((s) => s.recording);
+	const recordNote = useVizStore((s) => s.recordNote);
+	const size = exportSize(aspect, quality);
+	const noteText = formatNote(t, recordNote);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-2",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
+				label: t("record.frame"),
+				value: aspect,
+				options: VIDEO_ASPECTS.map((item) => ({
+					id: item.id,
+					label: item.label,
+					hint: t(ASPECT_HINT[item.id])
+				})),
+				onChange: (value) => act((engine) => engine.setVideoAspect(value))
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
+				label: t("record.resolution"),
+				value: quality,
+				options: VIDEO_QUALITIES.map((item) => ({
+					id: item.id,
+					label: item.label,
+					hint: t(QUALITY_HINT[item.id])
+				})),
+				onChange: (value) => act((engine) => engine.setVideoQuality(value))
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "px-1 text-xs tabular-nums text-faint",
+				children: t("record.size", {
+					width: size.width,
+					height: size.height
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "px-1 text-xs leading-relaxed text-faint",
+				children: t("record.blurb")
+			}),
+			noteText && !recording ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "px-1 text-xs leading-relaxed text-muted",
+				children: noteText
+			}) : null,
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				type: "button",
+				disabled: recording,
+				"data-hint": t("record.startHint"),
+				className: "flex h-11 w-full items-center justify-center rounded-lg bg-fg text-sm font-medium text-bg hover:bg-fg/90 disabled:opacity-40",
+				onClick: () => {
+					onStart?.();
+					act((engine) => engine.startRecording());
+				},
+				children: t("record.start")
+			})
+		]
+	});
+}
+function RecPill() {
+	const t = useT();
+	const recording = useVizStore((s) => s.recording);
+	const elapsed = useVizStore((s) => s.recordElapsed);
+	const format = useVizStore((s) => s.recordFormat);
+	const autoOrbit = useVizStore((s) => s.autoOrbit);
+	const aspect = useVizStore((s) => s.videoAspect);
+	const quality = useVizStore((s) => s.videoQuality);
+	if (!recording) return null;
+	const size = exportSize(aspect, quality);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "overlay-safe pointer-events-none absolute inset-0 z-50",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "pointer-events-auto absolute top-3 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl bg-surface px-2 py-1 shadow-panel ring-1 ring-border-strong",
+			"data-hint": t("record.pillHint"),
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "rec-dot mx-1 size-2.5 shrink-0 rounded-full bg-danger" }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "px-1 font-mono text-xs tabular-nums text-fg",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "mr-2 font-sans font-medium tracking-wider text-danger",
+							children: "REC"
+						}),
+						formatTime(elapsed),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "ml-2 text-faint",
+							children: [
+								format || "MP4",
+								" · ",
+								size.width,
+								"×",
+								size.height
+							]
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					"data-hint": autoOrbit ? t("record.circleOn") : t("record.circleOff"),
+					onClick: () => act((engine) => engine.setAutoOrbit(!autoOrbit)),
+					className: `h-9 rounded-md px-2.5 text-xs font-medium ${autoOrbit ? "bg-fg/10 text-primary" : "text-muted hover:bg-fg/10 hover:text-fg"}`,
+					children: t("record.circle")
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
+					label: t("record.stop"),
+					hint: t("record.stopHint"),
+					className: "size-9 text-danger",
+					onClick: () => act((engine) => void engine.stopRecording()),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Square, {
+						className: "size-3.5 fill-current",
+						strokeWidth: 1.5
+					})
+				})
+			]
+		})
+	});
+}
+function CircleCameraSection() {
+	const t = useT();
+	const autoOrbit = useVizStore((s) => s.autoOrbit);
+	const speed = useVizStore((s) => s.autoOrbitSpeed);
+	const dir = useVizStore((s) => s.autoOrbitDir);
+	const period = Math.round(60 / Math.max(.05, speed));
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "space-y-1",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
+				label: t("mix.circleCam"),
+				hint: t("mix.circleCamHint"),
+				checked: autoOrbit,
+				onChange: (value) => act((engine) => engine.setAutoOrbit(value))
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
+				label: t("mix.circleDir"),
+				value: dir,
+				options: [{
+					id: "ccw",
+					label: t("mix.ccw"),
+					hint: t("mix.ccwHint")
+				}, {
+					id: "cw",
+					label: t("mix.cw"),
+					hint: t("mix.cwHint")
+				}],
+				onChange: (value) => act((engine) => engine.setAutoOrbitDir(value))
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
+				label: t("mix.circleSpeed"),
+				hint: t("mix.circleSpeedHint"),
+				min: .15,
+				max: 2.5,
+				step: .05,
+				value: speed,
+				display: t("mix.circleSpeedDisplay", {
+					speed: speed.toFixed(2),
+					period
+				}),
+				onChange: (value) => act((engine) => engine.setAutoOrbitSpeed(value))
+			})
+		]
+	});
 }
 var FIRST_DELAY = 450;
 var NEXT_DELAY = 80;
@@ -583,13 +953,21 @@ function HintLayer() {
 	});
 }
 function TrackList({ activeId, onPick, onAdd, compact = false }) {
+	const t = useT();
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "space-y-1",
 		children: [LIBRARY.map((track) => {
 			const active = track.id === activeId;
+			const title = t(`track.${track.id}.title`);
+			const composer = t(`track.${track.id}.composer`);
+			const detail = t(`track.${track.id}.detail`);
 			return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 				type: "button",
-				"data-hint": `Play ${track.title} by ${track.composer}. ${track.credit}.`,
+				"data-hint": t("track.playHint", {
+					title,
+					composer,
+					credit: track.credit
+				}),
 				onClick: () => onPick(track.id),
 				className: cn("flex w-full items-center gap-3 rounded-lg px-3 text-left transition-colors duration-150", compact ? "h-11" : "h-12", active ? "bg-primary/15 text-fg" : "text-fg hover:bg-fg/10"),
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Music, {
@@ -599,16 +977,16 @@ function TrackList({ activeId, onPick, onAdd, compact = false }) {
 					className: "min-w-0 flex-1",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						className: "block truncate text-sm",
-						children: track.title
+						children: title
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 						className: "block truncate text-xs text-faint",
-						children: [track.composer, compact ? "" : ` · ${track.detail}`]
+						children: [composer, compact ? "" : ` · ${detail}`]
 					})]
 				})]
 			}, track.id);
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 			type: "button",
-			"data-hint": "Open a file from your device — MP3, WAV, FLAC, and similar.",
+			"data-hint": t("track.addHint"),
 			onClick: onAdd,
 			className: cn("flex w-full items-center gap-3 rounded-lg px-3 text-left text-fg transition-colors duration-150 hover:bg-fg/10", compact ? "h-11" : "h-12"),
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Upload, {
@@ -616,111 +994,13 @@ function TrackList({ activeId, onPick, onAdd, compact = false }) {
 				strokeWidth: 1.75
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 				className: "text-sm",
-				children: "Add a track"
+				children: t("track.add")
 			})]
 		})]
-	});
-}
-function IconBtn({ label, hint, onClick, active, disabled, children, className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-		type: "button",
-		"aria-label": label,
-		"data-hint": hint ?? label,
-		disabled,
-		onClick,
-		className: cn("inline-flex size-11 shrink-0 items-center justify-center rounded-md text-fg", "transition-colors duration-150", "hover:bg-fg/10 disabled:pointer-events-none disabled:opacity-40", active && "bg-fg/10 text-primary", className),
-		children
-	});
-}
-function Panel({ title, children, className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-		className: cn("panel rounded-2xl p-3", className),
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-			className: "mb-3 px-1 font-display text-lg font-medium tracking-tight text-fg",
-			children: title
-		}), children]
-	});
-}
-function RangeField({ label, hint, value, min, max, step, onChange, display }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
-		className: "block py-1",
-		"data-hint": hint ?? label,
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-			className: "mb-2 flex items-baseline justify-between gap-3 text-xs",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-				className: "text-muted",
-				children: label
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-				className: "tabular-nums text-faint",
-				children: display ?? value
-			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-			type: "range",
-			className: "hud-range",
-			min,
-			max,
-			step,
-			value,
-			"aria-label": label,
-			onChange: (event) => onChange(Number(event.target.value))
-		})]
-	});
-}
-function Segmented({ label, hint, value, options, onChange }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "py-1",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-			className: "mb-2 text-xs text-muted",
-			children: label
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "flex rounded-lg bg-surface-2 p-1",
-			children: options.map((option) => {
-				const selected = option.id === value;
-				return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					type: "button",
-					"data-hint": option.hint ?? hint ?? `${label}: ${option.label}`,
-					onClick: () => onChange(option.id),
-					className: cn("h-9 min-w-0 flex-1 rounded-md px-2 text-xs font-medium transition-colors duration-150", selected ? "bg-fg text-bg" : "text-muted hover:text-fg"),
-					children: option.label
-				}, option.id);
-			})
-		})]
-	});
-}
-function ToggleRow({ label, hint, checked, onChange }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-		type: "button",
-		role: "switch",
-		"aria-checked": checked,
-		"data-hint": hint ?? label,
-		onClick: () => onChange(!checked),
-		className: "flex h-11 w-full items-center justify-between rounded-lg px-2 text-sm text-fg hover:bg-fg/10",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: label }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-			className: cn("relative h-6 w-10 rounded-full p-0.5 transition-colors duration-150", checked ? "bg-primary" : "bg-fg/15"),
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: cn("block size-5 rounded-full transition-transform duration-150", checked ? "translate-x-4 bg-primary-fg" : "translate-x-0 bg-fg") })
-		})]
-	});
-}
-function MakerCredit({ className }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-		className: cn("text-xs tracking-wide text-muted", className),
-		children: [
-			"Made by Marko Njegomir",
-			" ",
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-				href: "https://x.com/njmarko",
-				target: "_blank",
-				rel: "noopener noreferrer",
-				"data-hint": "Open Marko Njegomir on X.",
-				className: "inline-flex h-6 items-center text-fg underline decoration-border-strong underline-offset-2 transition-colors duration-150 hover:text-primary hover:decoration-primary",
-				children: "@njmarko"
-			}),
-			" ",
-			"with Grok"
-		]
 	});
 }
 function IntroCard({ onOpenFile, visible, ready }) {
+	const t = useT();
 	if (!visible) return null;
 	const play = (id) => act((engine) => {
 		engine.loadLibrary(id);
@@ -731,26 +1011,31 @@ function IntroCard({ onOpenFile, visible, ready }) {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "intro-card pointer-events-auto max-h-dvh w-full max-w-lg overflow-y-auto rounded-3xl p-6 md:p-8",
 			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "mb-4 flex justify-center",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LanguagePicker, {})
+				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mb-2 text-center text-xs font-medium tracking-widest text-muted uppercase",
-					children: "A living orrery"
+					children: t("app.tagline")
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h1", {
 					className: "font-display text-center text-5xl leading-tight font-medium tracking-tight text-fg md:text-6xl",
 					children: [
-						"Air ",
+						t("app.titleLead"),
+						" ",
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("em", {
 							className: "text-primary italic",
-							children: "on"
+							children: t("app.titleOn")
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-						"Celestial Strings"
+						t("app.titleTail")
 					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MakerCredit, { className: "mt-3 text-center" }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mx-auto mt-4 max-w-sm text-center text-sm leading-relaxed text-muted",
-					children: "Real performances of Strauss, Mozart, Bach, and Beethoven — or add your own. Frequency bands stretch glowing strings between the worlds."
+					children: t("intro.body")
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "mt-6 rounded-2xl bg-surface-2/80 p-2",
@@ -759,253 +1044,95 @@ function IntroCard({ onOpenFile, visible, ready }) {
 						onAdd: onOpenFile
 					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "px-3 py-4 text-center text-sm text-muted",
-						children: "Lighting the worlds…"
+						children: t("intro.lighting")
 					})
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mt-5 text-center text-xs text-faint",
-					children: "Click two planets, then Weave. Space plays. H hides the chrome. Hover any control for a hint."
+					children: t("intro.controls")
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mt-3 text-center text-xs text-faint",
-					children: "Worlds: Solar System Scope maps, CC BY 4.0 — the highest published size downloads in the background on first visit. Recordings: Musopen, Advent Chamber Orchestra, U.S. Air Force Band."
+					children: t("intro.credits")
 				})
 			]
 		})
 	});
 }
-function ExportFields({ onStart }) {
-	const aspect = useVizStore((s) => s.videoAspect);
-	const quality = useVizStore((s) => s.videoQuality);
-	const recording = useVizStore((s) => s.recording);
-	const recordNote = useVizStore((s) => s.recordNote);
-	const size = exportSize(aspect, quality);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-2",
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
-				label: "Frame",
-				value: aspect,
-				options: VIDEO_ASPECTS,
-				onChange: (value) => act((engine) => engine.setVideoAspect(value))
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
-				label: "Resolution",
-				value: quality,
-				options: VIDEO_QUALITIES,
-				onChange: (value) => act((engine) => engine.setVideoQuality(value))
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-				className: "px-1 text-xs tabular-nums text-faint",
-				children: [
-					size.width,
-					" × ",
-					size.height
-				]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "px-1 text-xs leading-relaxed text-faint",
-				children: "Only the sky is saved — menus and the cursor stay out of the file. Drag to orbit while it records. MP4 when this browser can encode it."
-			}),
-			recordNote && !recording ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "px-1 text-xs leading-relaxed text-muted",
-				children: recordNote
-			}) : null,
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-				type: "button",
-				disabled: recording,
-				"data-hint": "Start capturing the orrery and the music that is playing. Menus are not recorded.",
-				className: "flex h-11 w-full items-center justify-center rounded-lg bg-fg text-sm font-medium text-bg hover:bg-fg/90 disabled:opacity-40",
-				onClick: () => {
-					onStart?.();
-					act((engine) => engine.startRecording());
-				},
-				children: "Start recording"
-			})
-		]
-	});
-}
-function RecPill() {
-	const recording = useVizStore((s) => s.recording);
-	const elapsed = useVizStore((s) => s.recordElapsed);
-	const format = useVizStore((s) => s.recordFormat);
-	const autoOrbit = useVizStore((s) => s.autoOrbit);
-	const aspect = useVizStore((s) => s.videoAspect);
-	const quality = useVizStore((s) => s.videoQuality);
-	if (!recording) return null;
-	const size = exportSize(aspect, quality);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "overlay-safe pointer-events-none absolute inset-0 z-50",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "pointer-events-auto absolute top-3 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-2xl bg-surface px-2 py-1 shadow-panel ring-1 ring-border-strong",
-			"data-hint": "Recording the sky and the music. Menus and the cursor stay out of the file. Drag to orbit. Escape stops.",
-			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "rec-dot mx-1 size-2.5 shrink-0 rounded-full bg-danger" }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-					className: "px-1 font-mono text-xs tabular-nums text-fg",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "mr-2 font-sans font-medium tracking-wider text-danger",
-							children: "REC"
-						}),
-						formatTime(elapsed),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-							className: "ml-2 text-faint",
-							children: [
-								format || "MP4",
-								" · ",
-								size.width,
-								"×",
-								size.height
-							]
-						})
-					]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					type: "button",
-					"data-hint": autoOrbit ? "Stop circling the sun. You can still drag the camera." : "Let the camera slowly circle the sun. You can still drag to look around.",
-					onClick: () => act((engine) => engine.setAutoOrbit(!autoOrbit)),
-					className: `h-9 rounded-md px-2.5 text-xs font-medium ${autoOrbit ? "bg-fg/10 text-primary" : "text-muted hover:bg-fg/10 hover:text-fg"}`,
-					children: "Circle"
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-					label: "Stop recording",
-					hint: "Stop and download the video with the music.",
-					className: "size-9 text-danger",
-					onClick: () => act((engine) => void engine.stopRecording()),
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Square, {
-						className: "size-3.5 fill-current",
-						strokeWidth: 1.5
-					})
-				})
-			]
-		})
-	});
-}
-function CircleCameraSection() {
-	const autoOrbit = useVizStore((s) => s.autoOrbit);
-	const speed = useVizStore((s) => s.autoOrbitSpeed);
-	const dir = useVizStore((s) => s.autoOrbitDir);
-	const period = Math.round(60 / Math.max(.05, speed));
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-1",
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-				label: "Circle camera",
-				hint: "Orbit the camera around the sun. You can still drag to look around. Works while recording.",
-				checked: autoOrbit,
-				onChange: (value) => act((engine) => engine.setAutoOrbit(value))
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
-				label: "Circle direction",
-				value: dir,
-				options: [{
-					id: "ccw",
-					label: "CCW",
-					hint: "Counter-clockwise around the sun, looking down from above."
-				}, {
-					id: "cw",
-					label: "CW",
-					hint: "Clockwise around the sun, looking down from above."
-				}],
-				onChange: (value) => act((engine) => engine.setAutoOrbitDir(value))
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-				label: "Circle speed",
-				hint: "How fast the camera circles the sun. 0.50 is a slow two-minute orbit.",
-				min: .15,
-				max: 2.5,
-				step: .05,
-				value: speed,
-				display: `${speed.toFixed(2)} · ${period}s / orbit`,
-				onChange: (value) => act((engine) => engine.setAutoOrbitSpeed(value))
-			})
-		]
-	});
-}
-var CHANNELS = [
-	{
-		id: "bass",
-		label: "Bass",
-		hint: "This string listens to the bass — left-hand piano, cellos, low notes.",
-		tone: "data-[on=true]:bg-bass data-[on=true]:text-primary-fg"
-	},
-	{
-		id: "mid",
-		label: "Mids",
-		hint: "This string listens to the mids — inner voices and the middle of the keyboard.",
-		tone: "data-[on=true]:bg-mid data-[on=true]:text-primary-fg"
-	},
-	{
-		id: "high",
-		label: "Treble",
-		hint: "This string listens to the treble — right-hand melody, violins, sparkle.",
-		tone: "data-[on=true]:bg-high data-[on=true]:text-primary-fg"
-	},
-	{
-		id: "all",
-		label: "All",
-		hint: "This string listens to the whole mix.",
-		tone: "data-[on=true]:bg-fg data-[on=true]:text-bg"
-	}
+var CHANNEL_IDS = [
+	"bass",
+	"mid",
+	"high",
+	"all"
 ];
+var CHANNEL_TONE = {
+	bass: "data-[on=true]:bg-bass data-[on=true]:text-primary-fg",
+	mid: "data-[on=true]:bg-mid data-[on=true]:text-primary-fg",
+	high: "data-[on=true]:bg-high data-[on=true]:text-primary-fg",
+	all: "data-[on=true]:bg-fg data-[on=true]:text-bg"
+};
 function WorldsPanel() {
+	const t = useT();
 	const bodies = useVizStore((s) => s.bodies);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Panel, {
-		title: "Worlds",
+		title: t("worlds.title"),
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
 			className: "hud-scroll max-h-64 space-y-0.5 overflow-y-auto pr-1",
-			children: bodies.map((body) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: `flex h-11 items-center gap-1 rounded-lg px-1 ${body.selected ? "bg-primary/15" : "hover:bg-fg/10"}`,
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-						label: body.visible ? `Hide ${body.name}` : `Show ${body.name}`,
-						hint: body.visible ? `Hide ${body.name} and its orbit from the sky.` : `Show ${body.name} again.`,
-						className: "size-9",
-						onClick: () => act((engine) => engine.setBodyVisibility(body.name, !body.visible)),
-						children: body.visible ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, {
-							className: "size-3.5",
-							strokeWidth: 1.75
-						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, {
-							className: "size-3.5",
-							strokeWidth: 1.75
-						})
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						type: "button",
-						className: "min-w-0 flex-1 truncate px-1 text-left text-sm",
-						"data-hint": `Select ${body.name}. Choose two worlds, then weave a string between them.`,
-						onClick: () => act((engine) => engine.toggleSelectionByName(body.name)),
-						children: body.name
-					}),
-					body.hasPath ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-						type: "color",
-						"aria-label": `${body.name} orbit color`,
-						"data-hint": `Color of ${body.name}'s orbit path.`,
-						value: body.pathColor,
-						className: "size-7 shrink-0 cursor-pointer rounded-sm border-0 bg-transparent",
-						onChange: (event) => act((engine) => engine.setPlanetPathColor(body.name, event.target.value))
-					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "size-7" })
-				]
-			}) }, body.name))
+			children: bodies.map((body) => {
+				const name = bodyName(t, body.name);
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: `flex h-11 items-center gap-1 rounded-lg px-1 ${body.selected ? "bg-primary/15" : "hover:bg-fg/10"}`,
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
+							label: body.visible ? t("worlds.hide", { name }) : t("worlds.show", { name }),
+							hint: body.visible ? t("worlds.hideHint", { name }) : t("worlds.showHint", { name }),
+							className: "size-9",
+							onClick: () => act((engine) => engine.setBodyVisibility(body.name, !body.visible)),
+							children: body.visible ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, {
+								className: "size-3.5",
+								strokeWidth: 1.75
+							}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, {
+								className: "size-3.5",
+								strokeWidth: 1.75
+							})
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							className: "min-w-0 flex-1 truncate px-1 text-left text-sm",
+							"data-hint": t("worlds.selectHint", { name }),
+							onClick: () => act((engine) => engine.toggleSelectionByName(body.name)),
+							children: name
+						}),
+						body.hasPath ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							type: "color",
+							"aria-label": t("worlds.pathColor", { name }),
+							"data-hint": t("worlds.pathHint", { name }),
+							value: body.pathColor,
+							className: "size-7 shrink-0 cursor-pointer rounded-sm border-0 bg-transparent",
+							onChange: (event) => act((engine) => engine.setPlanetPathColor(body.name, event.target.value))
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "size-7" })
+					]
+				}) }, body.name);
+			})
 		})
 	});
 }
 function StringsPanel() {
+	const t = useT();
 	const connections = useVizStore((s) => s.connections);
 	const canCreate = useVizStore((s) => s.canCreate);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Panel, {
-		title: "Strings",
+		title: t("strings.title"),
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 			type: "button",
 			disabled: !canCreate,
-			"data-hint": canCreate ? "Stretch a glowing string between the two selected worlds." : "Select two worlds first — click them in the sky or in Worlds.",
+			"data-hint": canCreate ? t("strings.weaveHint") : t("strings.weaveDisabled"),
 			onClick: () => act((engine) => engine.createConnection()),
 			className: "mb-2 flex h-10 w-full items-center justify-center rounded-lg bg-fg/10 text-xs font-medium text-fg hover:bg-fg/15 disabled:opacity-40",
-			children: "Weave selected worlds"
+			children: t("strings.weave")
 		}), connections.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 			className: "px-1 py-3 text-xs text-faint",
-			children: "No strings yet. Select two worlds to weave."
+			children: t("strings.empty")
 		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
 			className: "hud-scroll max-h-72 space-y-1 overflow-y-auto pr-1",
 			children: connections.map((conn) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
@@ -1017,22 +1144,22 @@ function StringsPanel() {
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 								className: "min-w-0 flex-1 truncate px-1 text-xs text-fg",
 								children: [
-									conn.a,
+									bodyName(t, conn.a),
 									" · ",
-									conn.b
+									bodyName(t, conn.b)
 								]
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 								type: "color",
-								"aria-label": "String color",
-								"data-hint": "Color of this string.",
+								"aria-label": t("strings.color"),
+								"data-hint": t("strings.colorHint"),
 								value: conn.color,
 								className: "size-7 shrink-0 cursor-pointer rounded-sm border-0 bg-transparent",
 								onChange: (event) => act((engine) => engine.setConnectionColor(conn.id, event.target.value))
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-								label: conn.visible ? "Hide string" : "Show string",
-								hint: conn.visible ? "Hide this string without removing it." : "Show this string again.",
+								label: conn.visible ? t("strings.hide") : t("strings.show"),
+								hint: conn.visible ? t("strings.hideHint") : t("strings.showHint"),
 								className: "size-8",
 								onClick: () => act((engine) => engine.setConnectionVisibility(conn.id, !conn.visible)),
 								children: conn.visible ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, {
@@ -1044,8 +1171,8 @@ function StringsPanel() {
 								})
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-								label: "Remove string",
-								hint: "Cut this string and its trail.",
+								label: t("strings.remove"),
+								hint: t("strings.removeHint"),
 								className: "size-8 text-danger",
 								onClick: () => act((engine) => engine.removeConnection(conn.id)),
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Trash2, {
@@ -1057,21 +1184,21 @@ function StringsPanel() {
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "mt-1.5 px-1 text-xs text-muted",
-						children: "Channel"
+						children: t("strings.channel")
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "mt-1 grid grid-cols-4 gap-1 px-1",
-						children: CHANNELS.map((channel) => {
-							const on = conn.rhythmType === channel.id;
+						children: CHANNEL_IDS.map((id) => {
+							const on = conn.rhythmType === id;
 							return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 								type: "button",
 								"data-on": on,
-								"data-hint": channel.hint,
+								"data-hint": t(`channel.${id}Hint`),
 								"aria-pressed": on,
-								onClick: () => act((engine) => engine.setConnectionRhythmType(conn.id, channel.id)),
-								className: cn("h-8 rounded-md text-xs font-medium transition-colors duration-150", "bg-fg/10 text-muted hover:text-fg", channel.tone),
-								children: channel.label
-							}, channel.id);
+								onClick: () => act((engine) => engine.setConnectionRhythmType(conn.id, id)),
+								className: cn("h-8 rounded-md text-xs font-medium transition-colors duration-150", "bg-fg/10 text-muted hover:text-fg", CHANNEL_TONE[id]),
+								children: t(`channel.${id}`)
+							}, id);
 						})
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -1082,8 +1209,8 @@ function StringsPanel() {
 								min: 20,
 								max: 12e3,
 								step: 10,
-								"aria-label": "Low frequency",
-								"data-hint": "Lowest frequency this string listens to, in Hertz.",
+								"aria-label": t("strings.lowFreq"),
+								"data-hint": t("strings.lowHint"),
 								value: conn.minFreq,
 								className: "hud-select h-8 w-16 rounded-sm px-1 text-xs tabular-nums",
 								onChange: (event) => {
@@ -1101,8 +1228,8 @@ function StringsPanel() {
 								min: 20,
 								max: 12e3,
 								step: 10,
-								"aria-label": "High frequency",
-								"data-hint": "Highest frequency this string listens to, in Hertz.",
+								"aria-label": t("strings.highFreq"),
+								"data-hint": t("strings.highHint"),
 								value: conn.maxFreq,
 								className: "hud-select h-8 w-16 rounded-sm px-1 text-xs tabular-nums",
 								onChange: (event) => {
@@ -1117,7 +1244,7 @@ function StringsPanel() {
 							}),
 							conn.rhythmType === "custom" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "ml-auto text-xs text-faint",
-								children: "Custom"
+								children: t("strings.custom")
 							}) : null
 						]
 					})
@@ -1127,6 +1254,7 @@ function StringsPanel() {
 	});
 }
 function MixPanel({ onRecordStart }) {
+	const t = useT();
 	const audio = useVizStore((s) => s.audio);
 	const speed = useVizStore((s) => s.speed);
 	const spinFactor = useVizStore((s) => s.spinFactor);
@@ -1141,68 +1269,77 @@ function MixPanel({ onRecordStart }) {
 	const ringBrightness = useVizStore((s) => s.ringBrightness);
 	const hiRes = useVizStore((s) => s.hiRes);
 	const hiResNote = useVizStore((s) => s.hiResNote);
+	const mixNote = formatNote(t, audio.mixNote);
+	const mixVoice = audio.mixVoice ? t(audio.mixVoice) : "";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Panel, {
-		title: "Mix",
+		title: t("mix.title"),
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "hud-scroll mix-scroll space-y-3 overflow-y-auto pr-1",
 			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "mb-2 px-1 text-xs text-muted",
+					children: t("lang.label")
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LanguagePicker, { compact: true })] }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-					label: "Hear the rhythm",
-					hint: "When on, the music weaves the strings. When off, they idle at a steady pace.",
+					label: t("mix.hear"),
+					hint: t("mix.hearHint"),
 					checked: audio.rhythmEnabled,
 					onChange: (value) => act((engine) => engine.setRhythmEnabled(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
-					label: "Onset",
+					label: t("mix.onset"),
 					value: audio.rhythmMode,
 					options: [{
 						id: "advanced",
-						label: "Onsets",
-						hint: "Attacks add extra strands. Loudness of each band still sets how fast they keep drawing."
+						label: t("mix.onsets"),
+						hint: t("mix.onsetsHint")
 					}, {
 						id: "simple",
-						label: "Threshold",
-						hint: "Loudness of each band sets how fast its strings draw. Below the floor they stop."
+						label: t("mix.threshold"),
+						hint: t("mix.thresholdHint")
 					}],
 					onChange: (value) => act((engine) => engine.setRhythmMode(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-					label: "Auto mix",
-					hint: "Scan the recording for large sections. Park each band just above its quiet floor so single notes weave, then go silent between them. Drive how fast they draw from how busy the section is. Drag a slider to lock it.",
+					label: t("mix.auto"),
+					hint: t("mix.autoHint"),
 					checked: audio.autoMix,
 					onChange: (value) => act((engine) => engine.setAutoMix(value))
 				}),
-				audio.mixNote ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				mixNote ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "-mt-2 px-2 text-xs leading-relaxed text-faint",
-					children: audio.mixNote
+					children: mixNote
 				}) : null,
-				audio.mixVoice && audio.mixStatus === "live" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				mixVoice && audio.mixStatus === "live" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "-mt-1 rounded-lg bg-surface-2/70 px-2 py-2",
-					"data-hint": "What this section of the recording is doing. Bass follows the left hand and low notes; treble follows melody and the right hand.",
+					"data-hint": t("mix.sectionHint"),
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "text-xs tracking-wide text-muted uppercase",
-							children: "This section"
+							children: t("mix.sectionLabel")
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							className: "mt-1 text-sm leading-snug text-fg",
-							children: audio.mixVoice
+							children: mixVoice
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "mt-2 flex flex-wrap gap-1",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VoiceChip, {
-									label: "Bass",
+									t,
+									label: t("channel.bass"),
 									on: audio.bands.bass.playing,
 									tone: "bg-bass text-primary-fg"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VoiceChip, {
-									label: "Mids",
+									t,
+									label: t("channel.mid"),
 									on: audio.bands.mid.playing,
 									tone: "bg-mid text-primary-fg"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VoiceChip, {
-									label: "Treble",
+									t,
+									label: t("channel.high"),
 									on: audio.bands.high.playing,
 									tone: "bg-high text-primary-fg"
 								})
@@ -1212,19 +1349,19 @@ function MixPanel({ onRecordStart }) {
 				}) : null,
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BandRow, {
 					band: "bass",
-					label: "Bass"
+					label: t("channel.bass")
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BandRow, {
 					band: "mid",
-					label: "Mids"
+					label: t("channel.mid")
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BandRow, {
 					band: "high",
-					label: "Treble"
+					label: t("channel.high")
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Orbit speed",
-					hint: "How fast the planets travel. 1 is the default.",
+					label: t("mix.orbitSpeed"),
+					hint: t("mix.orbitSpeedHint"),
 					min: 0,
 					max: 4,
 					step: .05,
@@ -1234,8 +1371,8 @@ function MixPanel({ onRecordStart }) {
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CircleCameraSection, {}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Spin",
-					hint: "How fast the worlds rotate on their axes.",
+					label: t("mix.spin"),
+					hint: t("mix.spinHint"),
 					min: 0,
 					max: .08,
 					step: .001,
@@ -1244,98 +1381,98 @@ function MixPanel({ onRecordStart }) {
 					onChange: (value) => act((engine) => engine.setSpinFactor(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Idle weave",
-					hint: "How often strings draw while no music is driving them.",
+					label: t("mix.idleWeave"),
+					hint: t("mix.idleWeaveHint"),
 					min: .5,
 					max: 12,
 					step: .1,
 					value: linesPerSec,
-					display: `${linesPerSec.toFixed(1)} /s`,
+					display: t("mix.idleWeaveDisplay", { n: linesPerSec.toFixed(1) }),
 					onChange: (value) => act((engine) => engine.setLinesPerSec(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Max weave",
-					hint: "Loudest notes in a band draw this many strands per second. Quieter notes draw fewer. Below the floor, none.",
+					label: t("mix.maxWeave"),
+					hint: t("mix.maxWeaveHint"),
 					min: 3,
 					max: 24,
 					step: .5,
 					value: maxWeave,
-					display: `${maxWeave.toFixed(1)} /s`,
+					display: t("mix.idleWeaveDisplay", { n: maxWeave.toFixed(1) }),
 					onChange: (value) => act((engine) => engine.setMaxWeave(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Trail",
-					hint: "How long each strand lingers before fading.",
+					label: t("mix.trail"),
+					hint: t("mix.trailHint"),
 					min: 4,
 					max: 180,
 					step: 1,
 					value: trailDuration,
-					display: `${Math.round(trailDuration)}s`,
+					display: t("mix.trailDisplay", { n: Math.round(trailDuration) }),
 					onChange: (value) => act((engine) => engine.setTrailDuration(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
-					label: "Paths",
+					label: t("mix.paths"),
 					options: [
 						{
 							id: "realistic",
-							label: "Kepler",
-							hint: "Elliptical orbits, as in the real solar system."
+							label: t("mix.kepler"),
+							hint: t("mix.keplerHint")
 						},
 						{
 							id: "circular",
-							label: "Circle",
-							hint: "Perfect circles — easier to read at a glance."
+							label: t("mix.circle"),
+							hint: t("mix.circleHint")
 						},
 						{
 							id: "hidden",
-							label: "Hide",
-							hint: "Hide orbit paths; worlds still move."
+							label: t("mix.hidePaths"),
+							hint: t("mix.hidePathsHint")
 						}
 					],
 					value: orbitMode,
 					onChange: (value) => act((engine) => engine.setOrbitMode(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
-					label: "Sky",
+					label: t("mix.sky"),
 					value: background,
 					options: [
 						{
 							id: "milkyway",
-							label: "Milky",
-							hint: "Wrap the sky in the Milky Way map."
+							label: t("mix.milky"),
+							hint: t("mix.milkyHint")
 						},
 						{
 							id: "stars",
-							label: "Stars",
-							hint: "A quieter star field without the galaxy band."
+							label: t("mix.stars"),
+							hint: t("mix.starsHint")
 						},
 						{
 							id: "none",
-							label: "Void",
-							hint: "Empty dark sky."
+							label: t("mix.void"),
+							hint: t("mix.voidHint")
 						}
 					],
 					onChange: (value) => act((engine) => engine.setBackground(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-					label: "Ultra maps",
-					hint: "On first visit the orrery downloads the highest Solar System Scope maps (8K where they publish them) and keeps them on this device. Uranus and Neptune stay 2K — that is the largest SSS makes. Turn off to use the bundled 2K maps.",
+					label: t("mix.ultra"),
+					hint: t("mix.ultraHint"),
 					checked: hiRes,
 					onChange: (value) => act((engine) => void engine.setHiRes(value))
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "-mt-2 px-1 text-xs leading-relaxed text-faint",
-					children: [hiResNote, ". Solar System Scope, CC BY 4.0."]
+					children: t("mix.ultraCredit", { note: formatNote(t, hiResNote) })
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
-					label: "Parallax dust",
-					hint: "Nearby dust motes that drift as you orbit the camera.",
+					label: t("mix.parallax"),
+					hint: t("mix.parallaxHint"),
 					checked: parallax,
 					onChange: (value) => act((engine) => engine.setParallax(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Ambient",
-					hint: "Fill light on the night side of each world. 1 is the default.",
+					label: t("mix.ambient"),
+					hint: t("mix.ambientHint"),
 					min: 0,
 					max: 1.4,
 					step: .02,
@@ -1344,8 +1481,8 @@ function MixPanel({ onRecordStart }) {
 					onChange: (value) => act((engine) => engine.setAmbient(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Bloom",
-					hint: "Glow around the sun and bright strings.",
+					label: t("mix.bloom"),
+					hint: t("mix.bloomHint"),
 					min: 0,
 					max: 1.4,
 					step: .02,
@@ -1354,8 +1491,8 @@ function MixPanel({ onRecordStart }) {
 					onChange: (value) => act((engine) => engine.setBloom(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
-					label: "Saturn rings",
-					hint: "How bright Saturn's rings read against the sky. Raise it if the ice bands look faint.",
+					label: t("mix.rings"),
+					hint: t("mix.ringsHint"),
 					min: 0,
 					max: 3,
 					step: .05,
@@ -1367,40 +1504,41 @@ function MixPanel({ onRecordStart }) {
 					className: "rounded-lg bg-surface-2/70 px-2 py-2",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "mb-1 px-1 font-display text-base text-fg",
-						children: "Export"
+						children: t("record.title")
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExportFields, { onStart: onRecordStart })]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex gap-2 pt-1",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 						type: "button",
-						"data-hint": "Send every planet back to its starting place.",
+						"data-hint": t("mix.resetHint"),
 						className: "h-10 flex-1 rounded-lg bg-surface-2 text-xs font-medium text-fg hover:bg-fg/10",
 						onClick: () => act((engine) => engine.resetPlanets()),
-						children: "Reset worlds"
+						children: t("mix.reset")
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 						type: "button",
-						"data-hint": "Erase drawn strings. Worlds stay where they are.",
+						"data-hint": t("mix.clearHint"),
 						className: "h-10 flex-1 rounded-lg bg-surface-2 text-xs font-medium text-fg hover:bg-fg/10",
 						onClick: () => act((engine) => engine.clearTrails()),
-						children: "Clear trails"
+						children: t("mix.clear")
 					})]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mt-3 px-1 text-xs leading-relaxed text-faint",
-					children: "Maps from Solar System Scope, CC BY 4.0."
+					children: t("mix.mapsCredit")
 				})
 			]
 		})
 	});
 }
-function VoiceChip({ label, on, tone }) {
+function VoiceChip({ t, label, on, tone }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 		className: cn("inline-flex h-6 items-center rounded-md px-2 text-xs font-medium", on ? tone : "bg-fg/10 text-faint"),
-		children: on ? label : `${label} quiet`
+		children: on ? label : t("band.quietChip", { name: label })
 	});
 }
 function BandRow({ band, label }) {
+	const t = useT();
 	const state = useVizStore((s) => s.audio.bands[band]);
 	const autoMix = useVizStore((s) => s.audio.autoMix);
 	const tone = band === "bass" ? "bg-bass" : band === "mid" ? "bg-mid" : "bg-high";
@@ -1415,26 +1553,26 @@ function BandRow({ band, label }) {
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
-							"data-hint": `Turn ${label.toLowerCase()} on or off. Off, strings on this channel stay quiet.`,
+							"data-hint": t("band.toggleHint", { name: label }),
 							onClick: () => act((engine) => engine.setBandEnabled(band, !state.enabled)),
 							className: `text-xs font-medium ${state.enabled ? "text-fg" : "text-faint line-through"}`,
 							children: label
 						}),
 						autoMix ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: `text-xs ${state.playing ? "text-fg" : "text-faint"}`,
-							children: state.playing ? "playing" : "quiet"
+							children: state.playing ? t("band.playing") : t("band.quiet")
 						}) : null,
-						state.weaveRate > .05 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						state.weaveRate > .05 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 							className: "font-mono text-xs tabular-nums text-faint",
-							children: [state.weaveRate.toFixed(1), " /s"]
+							children: t("band.rate", { n: state.weaveRate.toFixed(1) })
 						}) : null
 					]
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex items-center gap-1",
 					children: [autoMix && state.locked ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 						type: "button",
-						"aria-label": `Unlock ${label}`,
-						"data-hint": "This slider is locked. Click to let auto mix move it again.",
+						"aria-label": t("band.unlock", { name: label }),
+						"data-hint": t("band.unlockHint"),
 						className: "inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-fg/10 hover:text-fg",
 						onClick: () => act((engine) => engine.unlockBand(band)),
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Lock, {
@@ -1461,15 +1599,25 @@ function BandRow({ band, label }) {
 				max: 3,
 				step: .05,
 				value: state.sensitivity,
-				"aria-label": `${label} sensitivity`,
-				"data-hint": `How quiet a ${label.toLowerCase()} note can be and still weave. Higher sits the floor lower so left-hand or melody notes fire, then go silent between them. Drag to lock.`,
+				"aria-label": t("band.sensitivity", { name: label }),
+				"data-hint": t("band.sensitivityHint", { name: label.toLowerCase() }),
 				onPointerDown: () => act((engine) => engine.lockBand(band)),
 				onChange: (event) => act((engine) => engine.setBandSensitivity(band, Number(event.target.value)))
 			})
 		]
 	});
 }
+function trackLabel(t, trackId, trackName) {
+	if (!trackId) return t("track.none");
+	if (trackId === "file") return trackName;
+	if (trackId === "generated") return t("track.generated");
+	const title = t(`track.${trackId}.title`);
+	const composer = t(`track.${trackId}.composer`);
+	if (title.startsWith("track.")) return trackName;
+	return `${title} — ${composer}`;
+}
 function Transport({ onOpenFile, onOpenSheet }) {
+	const t = useT();
 	const audio = useVizStore((s) => s.audio);
 	const paused = useVizStore((s) => s.paused);
 	const canCreate = useVizStore((s) => s.canCreate);
@@ -1479,6 +1627,7 @@ function Transport({ onOpenFile, onOpenSheet }) {
 	const recording = useVizStore((s) => s.recording);
 	const progress = audio.duration > 0 ? audio.current / audio.duration : 0;
 	const muted = audio.muted || audio.volume <= .001;
+	const name = trackLabel(t, audio.trackId, audio.trackName);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
 		className: "pointer-events-auto relative w-full max-w-3xl",
 		children: [
@@ -1504,7 +1653,7 @@ function Transport({ onOpenFile, onOpenSheet }) {
 				className: "panel absolute inset-x-0 bottom-full z-30 mb-2 rounded-2xl p-3",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "mb-2 px-1 font-display text-lg text-fg",
-					children: "Export video"
+					children: t("record.videoTitle")
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExportFields, { onStart: () => setExportOpen(false) })]
 			}) : null,
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -1513,8 +1662,8 @@ function Transport({ onOpenFile, onOpenSheet }) {
 					className: "flex items-center gap-1 md:gap-2",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-							label: audio.playing ? "Pause" : "Play",
-							hint: audio.playing ? "Pause the recording. Space also toggles." : "Play the recording. Space also toggles.",
+							label: audio.playing ? t("player.pause") : t("player.play"),
+							hint: audio.playing ? t("player.pauseHint") : t("player.playHint"),
 							onClick: () => act((engine) => {
 								if (!engine.audio.hasTrack) engine.loadDemo();
 								engine.toggleAudio();
@@ -1533,7 +1682,7 @@ function Transport({ onOpenFile, onOpenSheet }) {
 								className: "flex items-baseline justify-between gap-3",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 									className: "truncate text-sm text-fg",
-									children: audio.trackName
+									children: name
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 									className: "shrink-0 font-mono text-xs tabular-nums text-faint",
 									children: [
@@ -1550,14 +1699,14 @@ function Transport({ onOpenFile, onOpenSheet }) {
 								step: .001,
 								value: progress,
 								disabled: !audio.hasTrack,
-								"aria-label": "Seek",
-								"data-hint": "Scrub the recording. Mix sliders follow the section under the playhead.",
+								"aria-label": t("player.seek"),
+								"data-hint": t("player.seekHint"),
 								onChange: (event) => act((engine) => engine.seekAudio(Number(event.target.value)))
 							})]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-							label: muted ? "Unmute" : "Mute",
-							hint: muted ? "Unmute the recording." : "Mute the recording. The speaker also toggles mute.",
+							label: muted ? t("player.unmute") : t("player.mute"),
+							hint: muted ? t("player.unmuteHint") : t("player.muteHint"),
 							className: "size-9",
 							active: muted,
 							onClick: () => act((engine) => engine.toggleMute()),
@@ -1576,13 +1725,13 @@ function Transport({ onOpenFile, onOpenSheet }) {
 							max: 1,
 							step: .01,
 							value: audio.volume,
-							"aria-label": "Volume",
-							"data-hint": "Playback volume.",
+							"aria-label": t("player.volume"),
+							"data-hint": t("player.volumeHint"),
 							onChange: (event) => act((engine) => engine.setVolume(Number(event.target.value)))
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-							label: "Choose a track",
-							hint: "Pick a public-domain recording or add your own.",
+							label: t("player.library"),
+							hint: t("player.libraryHint"),
 							active: libraryOpen,
 							onClick: () => {
 								setExportOpen(false);
@@ -1594,8 +1743,8 @@ function Transport({ onOpenFile, onOpenSheet }) {
 							})
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-							label: paused ? "Resume orbits" : "Pause orbits",
-							hint: paused ? "Let the planets move again. Music keeps playing." : "Freeze planetary motion. Music still plays.",
+							label: paused ? t("player.resumeOrbits") : t("player.pauseOrbits"),
+							hint: paused ? t("player.resumeOrbitsHint") : t("player.pauseOrbitsHint"),
 							active: paused,
 							onClick: () => act((engine) => engine.togglePaused()),
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Orbit, {
@@ -1604,8 +1753,8 @@ function Transport({ onOpenFile, onOpenSheet }) {
 							})
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-							label: "Export video",
-							hint: "Record the sky and the music. Menus and the cursor stay out of the file. You can drag the camera while it records.",
+							label: t("player.export"),
+							hint: t("record.exportHint"),
 							active: exportOpen || recording,
 							className: "hidden md:inline-flex",
 							onClick: () => {
@@ -1620,23 +1769,23 @@ function Transport({ onOpenFile, onOpenSheet }) {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							onClick: onOpenSheet,
-							"data-hint": "Open worlds, strings, and mix on a small screen.",
+							"data-hint": t("hud.tuneHint"),
 							className: "inline-flex h-11 items-center rounded-md px-3 text-xs font-medium text-muted hover:bg-fg/10 hover:text-fg lg:hidden",
-							children: "Tune"
+							children: t("hud.tune")
 						})
 					]
 				}), (selectedCount > 0 || canCreate) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "mt-1 flex items-center justify-between gap-3 px-2 pb-1",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 						className: "text-xs text-muted",
-						children: canCreate ? "Two worlds selected" : selectedCount === 1 ? "Select a second world" : `${selectedCount} selected`
+						children: canCreate ? t("strings.twoSelected") : selectedCount === 1 ? t("strings.pickSecond") : t("strings.nSelected", { n: selectedCount })
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 						type: "button",
 						disabled: !canCreate,
-						"data-hint": "Stretch a glowing string between the two selected worlds.",
+						"data-hint": t("strings.weaveHint"),
 						onClick: () => act((engine) => engine.createConnection()),
 						className: "h-9 rounded-md bg-fg px-3 text-xs font-medium text-bg disabled:opacity-40",
-						children: "Weave string"
+						children: t("strings.weaveShort")
 					})]
 				})]
 			})
@@ -1648,6 +1797,7 @@ function VizHud() {
 	const [dragging, setDragging] = (0, import_react.useState)(false);
 	const [sheet, setSheet] = (0, import_react.useState)("none");
 	const [fileReady, setFileReady] = (0, import_react.useState)(false);
+	const t = useT();
 	const uiHidden = useVizStore((s) => s.uiHidden);
 	const hasTrack = useVizStore((s) => s.audio.hasTrack);
 	const fps = useVizStore((s) => s.fps);
@@ -1678,7 +1828,7 @@ function VizHud() {
 			else if (key === "f") {
 				if (document.fullscreenElement) document.exitFullscreen();
 				else document.documentElement.requestFullscreen().catch(() => void 0);
-			} else if (key === "escape") {
+			} else if (event.key === "escape") {
 				act((engine) => {
 					if (engine.recording) engine.stopRecording();
 				});
@@ -1736,7 +1886,7 @@ function VizHud() {
 			className: "pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-3xl border border-dashed border-primary/50 bg-bg/40",
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "font-display text-2xl text-fg",
-				children: "Drop a song"
+				children: t("drop.song")
 			})
 		}) : null,
 		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RecPill, {}),
@@ -1745,8 +1895,8 @@ function VizHud() {
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "pointer-events-auto absolute top-3 right-3",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-					label: "Show chrome",
-					hint: "Show panels and the player. H also toggles them.",
+					label: t("hud.show"),
+					hint: t("hud.showHint"),
 					onClick: () => act((engine) => engine.toggleUi()),
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Eye, {
 						className: "size-4",
@@ -1761,24 +1911,28 @@ function VizHud() {
 					className: "flex items-start justify-between gap-3",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "pointer-events-auto px-1 pt-1",
-						"data-hint": "A living orrery — music weaves glowing strings between the worlds.",
+						"data-hint": t("hud.titleHint"),
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 								className: "font-display text-xl leading-none tracking-tight text-fg",
-								children: "Air on Celestial Strings"
+								children: t("app.title")
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(MakerCredit, { className: "mt-1" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LanguagePicker, {
+								compact: true,
+								className: "mt-2"
+							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 								className: "mt-1 text-xs tracking-widest text-faint uppercase",
-								children: ready ? `${Math.round(fps)} fps` : "Lighting the sky"
+								children: ready ? t("app.fps", { n: Math.round(fps) }) : t("intro.lightingSky")
 							})
 						]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "pointer-events-auto flex items-center gap-0.5",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-								label: "Zoom in",
-								hint: "Move the camera closer to the sun. + also zooms in.",
+								label: t("hud.zoomIn"),
+								hint: t("hud.zoomInHint"),
 								onClick: () => act((engine) => engine.zoomBy(.82)),
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, {
 									className: "size-4",
@@ -1786,8 +1940,8 @@ function VizHud() {
 								})
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-								label: "Zoom out",
-								hint: "Pull the camera back to see the outer worlds. − also zooms out.",
+								label: t("hud.zoomOut"),
+								hint: t("hud.zoomOutHint"),
 								onClick: () => act((engine) => engine.zoomBy(1.22)),
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Minus, {
 									className: "size-4",
@@ -1795,8 +1949,8 @@ function VizHud() {
 								})
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-								label: "Fullscreen",
-								hint: "Fill the screen with the orrery. F also toggles fullscreen.",
+								label: t("hud.fullscreen"),
+								hint: t("hud.fullscreenHint"),
 								onClick: () => {
 									if (document.fullscreenElement) document.exitFullscreen();
 									else document.documentElement.requestFullscreen().catch(() => void 0);
@@ -1807,8 +1961,8 @@ function VizHud() {
 								})
 							}),
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-								label: "Hide chrome",
-								hint: "Hide panels and the player. Press H to bring them back.",
+								label: t("hud.hide"),
+								hint: t("hud.hideHint"),
 								onClick: () => act((engine) => engine.toggleUi()),
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EyeOff, {
 									className: "size-4",
@@ -1850,8 +2004,8 @@ function VizHud() {
 			className: "absolute inset-0 z-40 lg:hidden",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 				type: "button",
-				"aria-label": "Close panel",
-				"data-hint": "Close this panel.",
+				"aria-label": t("hud.closePanel"),
+				"data-hint": t("hud.closeHint"),
 				className: "absolute inset-0 bg-bg/55",
 				onClick: () => setSheet("none")
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -1862,20 +2016,20 @@ function VizHud() {
 						className: "flex gap-1 rounded-lg bg-surface-2 p-1",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
-							"data-hint": "Worlds and strings.",
+							"data-hint": t("hud.sheetWorldsHint"),
 							onClick: () => setSheet("worlds"),
 							className: `h-9 rounded-md px-3 text-xs font-medium ${sheet === "worlds" ? "bg-fg text-bg" : "text-muted"}`,
-							children: "Worlds"
+							children: t("hud.sheetWorlds")
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
-							"data-hint": "Rhythm, mix, orbits, and sky.",
+							"data-hint": t("hud.sheetMixHint"),
 							onClick: () => setSheet("mix"),
 							className: `h-9 rounded-md px-3 text-xs font-medium ${sheet === "mix" ? "bg-fg text-bg" : "text-muted"}`,
-							children: "Mix"
+							children: t("hud.sheetMix")
 						})]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(IconBtn, {
-						label: "Close",
-						hint: "Close this panel.",
+						label: t("hud.close"),
+						hint: t("hud.closeHint"),
 						onClick: () => setSheet("none"),
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, {
 							className: "size-4",
@@ -1890,12 +2044,30 @@ function VizHud() {
 		}) : null
 	] });
 }
+function LocaleSync() {
+	const locale = useLocale();
+	const t = useT();
+	(0, import_react.useEffect)(() => {
+		hydrateLocale();
+	}, []);
+	(0, import_react.useEffect)(() => {
+		document.documentElement.lang = htmlLangFor(locale);
+		document.title = t("app.title");
+		const meta = document.querySelector("meta[name=\"description\"]");
+		if (meta) meta.setAttribute("content", t("app.description"));
+	}, [locale, t]);
+	return null;
+}
 var routes_exports = /* @__PURE__ */ __exportAll({ component: () => Home });
 function Home() {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 		className: "relative h-dvh w-full overflow-hidden bg-bg text-fg",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VizCanvas, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(VizHud, {})]
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LocaleSync, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VizCanvas, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VizHud, {})
+		]
 	});
 }
 //#endregion
-export { stampFilename as a, __exportAll as c, exportSize as i, CaptureSession as n, formatTime as o, downloadBlob as r, libraryTrack as s, routes_exports as t };
+export { stampFilename as a, note as c, exportSize as i, libraryTrack as l, CaptureSession as n, formatTime as o, downloadBlob as r, EMPTY_NOTE as s, routes_exports as t };

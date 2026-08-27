@@ -1,4 +1,5 @@
 import type { VideoAspect, VideoQuality } from "./recorder";
+import type { LocNote } from "./loc-note";
 import type * as THREE from "three";
 
 export type RhythmBand = "bass" | "mid" | "high" | "all" | "custom";
@@ -71,13 +72,13 @@ export type VizSnapshot = {
   selectedCount: number;
   canCreate: boolean;
   hiRes: boolean;
-  hiResNote: string;
+  hiResNote: LocNote;
   autoOrbit: boolean;
   autoOrbitSpeed: number;
   autoOrbitDir: OrbitDir;
   recording: boolean;
   recordElapsed: number;
-  recordNote: string;
+  recordNote: LocNote;
   recordFormat: string;
   videoAspect: VideoAspect;
   videoQuality: VideoQuality;
@@ -97,7 +98,7 @@ export type VizSnapshot = {
     rhythmMode: RhythmMode;
     autoMix: boolean;
     mixStatus: MixStatus;
-    mixNote: string;
+    mixNote: LocNote;
     mixVoice: string;
     bands: { bass: BandState; mid: BandState; high: BandState };
   };

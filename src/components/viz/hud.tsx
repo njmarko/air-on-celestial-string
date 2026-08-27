@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Maximize2, Minus, Plus, X } from "lucide-react";
+import { LanguagePicker } from "@/i18n/language-picker";
+import { useT } from "@/i18n/use-i18n";
 import { act, isAudioFile } from "@/lib/viz-actions";
 import { useVizStore } from "@/store/viz-store";
+import { RecPill } from "./export";
 import { HintLayer } from "./hint";
 import { IntroCard } from "./intro";
 import { MixPanel, StringsPanel, WorldsPanel } from "./panels";
-import { RecPill } from "./export";
 import { Transport } from "./transport";
 import { IconBtn, MakerCredit } from "./widgets";
 
@@ -16,6 +18,7 @@ export function VizHud() {
   const [dragging, setDragging] = useState(false);
   const [sheet, setSheet] = useState<Sheet>("none");
   const [fileReady, setFileReady] = useState(false);
+  const t = useT();
 
   const uiHidden = useVizStore((s) => s.uiHidden);
   const hasTrack = useVizStore((s) => s.audio.hasTrack);
@@ -64,7 +67,7 @@ export function VizHud() {
       } else if (key === "f") {
         if (document.fullscreenElement) void document.exitFullscreen();
         else void document.documentElement.requestFullscreen().catch(() => undefined);
-      } else if (key === "escape") {
+      } else if (event.key === "escape") {
         act((engine) => {
           if (engine.recording) void engine.stopRecording();
         });
@@ -127,7 +130,7 @@ export function VizHud() {
 
       {dragging ? (
         <div className="pointer-events-none absolute inset-4 z-30 flex items-center justify-center rounded-3xl border border-dashed border-primary/50 bg-bg/40">
-          <p className="font-display text-2xl text-fg">Drop a song</p>
+          <p className="font-display text-2xl text-fg">{t("drop.song")}</p>
         </div>
       ) : null}
 
@@ -137,8 +140,8 @@ export function VizHud() {
         <div className="overlay-safe pointer-events-none absolute inset-0 z-20">
           <div className="pointer-events-auto absolute top-3 right-3">
             <IconBtn
-              label="Show chrome"
-              hint="Show panels and the player. H also toggles them."
+              label={t("hud.show")}
+              hint={t("hud.showHint")}
               onClick={() => act((engine) => engine.toggleUi())}
             >
               <Eye className="size-4" strokeWidth={1.75} />
@@ -149,36 +152,34 @@ export function VizHud() {
         <div className="overlay-safe pointer-events-none absolute inset-0 z-20 flex flex-col">
           {hasTrack ? (
             <header className="flex items-start justify-between gap-3">
-              <div
-                className="pointer-events-auto px-1 pt-1"
-                data-hint="A living orrery — music weaves glowing strings between the worlds."
-              >
+              <div className="pointer-events-auto px-1 pt-1" data-hint={t("hud.titleHint")}>
                 <p className="font-display text-xl leading-none tracking-tight text-fg">
-                  Air on Celestial Strings
+                  {t("app.title")}
                 </p>
                 <MakerCredit className="mt-1" />
+                <LanguagePicker compact className="mt-2" />
                 <p className="mt-1 text-xs tracking-widest text-faint uppercase">
-                  {ready ? `${Math.round(fps)} fps` : "Lighting the sky"}
+                  {ready ? t("app.fps", { n: Math.round(fps) }) : t("intro.lightingSky")}
                 </p>
               </div>
               <div className="pointer-events-auto flex items-center gap-0.5">
                 <IconBtn
-                  label="Zoom in"
-                  hint="Move the camera closer to the sun. + also zooms in."
+                  label={t("hud.zoomIn")}
+                  hint={t("hud.zoomInHint")}
                   onClick={() => act((engine) => engine.zoomBy(0.82))}
                 >
                   <Plus className="size-4" strokeWidth={1.75} />
                 </IconBtn>
                 <IconBtn
-                  label="Zoom out"
-                  hint="Pull the camera back to see the outer worlds. − also zooms out."
+                  label={t("hud.zoomOut")}
+                  hint={t("hud.zoomOutHint")}
                   onClick={() => act((engine) => engine.zoomBy(1.22))}
                 >
                   <Minus className="size-4" strokeWidth={1.75} />
                 </IconBtn>
                 <IconBtn
-                  label="Fullscreen"
-                  hint="Fill the screen with the orrery. F also toggles fullscreen."
+                  label={t("hud.fullscreen")}
+                  hint={t("hud.fullscreenHint")}
                   onClick={() => {
                     if (document.fullscreenElement) void document.exitFullscreen();
                     else void document.documentElement.requestFullscreen().catch(() => undefined);
@@ -187,8 +188,8 @@ export function VizHud() {
                   <Maximize2 className="size-4" strokeWidth={1.75} />
                 </IconBtn>
                 <IconBtn
-                  label="Hide chrome"
-                  hint="Hide panels and the player. Press H to bring them back."
+                  label={t("hud.hide")}
+                  hint={t("hud.hideHint")}
                   onClick={() => act((engine) => engine.toggleUi())}
                 >
                   <EyeOff className="size-4" strokeWidth={1.75} />
@@ -229,8 +230,8 @@ export function VizHud() {
         <div className="absolute inset-0 z-40 lg:hidden">
           <button
             type="button"
-            aria-label="Close panel"
-            data-hint="Close this panel."
+            aria-label={t("hud.closePanel")}
+            data-hint={t("hud.closeHint")}
             className="absolute inset-0 bg-bg/55"
             onClick={() => setSheet("none")}
           />
@@ -239,26 +240,26 @@ export function VizHud() {
               <div className="flex gap-1 rounded-lg bg-surface-2 p-1">
                 <button
                   type="button"
-                  data-hint="Worlds and strings."
+                  data-hint={t("hud.sheetWorldsHint")}
                   onClick={() => setSheet("worlds")}
                   className={`h-9 rounded-md px-3 text-xs font-medium ${
                     sheet === "worlds" ? "bg-fg text-bg" : "text-muted"
                   }`}
                 >
-                  Worlds
+                  {t("hud.sheetWorlds")}
                 </button>
                 <button
                   type="button"
-                  data-hint="Rhythm, mix, orbits, and sky."
+                  data-hint={t("hud.sheetMixHint")}
                   onClick={() => setSheet("mix")}
                   className={`h-9 rounded-md px-3 text-xs font-medium ${
                     sheet === "mix" ? "bg-fg text-bg" : "text-muted"
                   }`}
                 >
-                  Mix
+                  {t("hud.sheetMix")}
                 </button>
               </div>
-              <IconBtn label="Close" hint="Close this panel." onClick={() => setSheet("none")}>
+              <IconBtn label={t("hud.close")} hint={t("hud.closeHint")} onClick={() => setSheet("none")}>
                 <X className="size-4" strokeWidth={1.75} />
               </IconBtn>
             </div>

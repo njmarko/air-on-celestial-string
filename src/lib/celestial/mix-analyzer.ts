@@ -212,28 +212,28 @@ function sectionFromFrames(
     presence,
     readiness,
     playing,
-    voice: voiceLabel(playing, readiness),
+    voice: voiceKey(playing, readiness),
   };
 }
 
-function voiceLabel(
+function voiceKey(
   playing: Record<MixBandKey, boolean>,
   readiness: Record<MixBandKey, number>,
 ): string {
   const { bass, mid, high } = playing;
-  if (!bass && !mid && !high) return "Quiet — waiting for notes";
-  if (bass && high && !mid) return "Bass and treble — left hand and melody";
-  if (bass && !mid && !high) return "Bass — left hand / low notes";
-  if (!bass && !mid && high) return "Treble — melody / right hand";
-  if (!bass && mid && !high) return "Mids — inner voices";
+  if (!bass && !mid && !high) return "voice.quiet";
+  if (bass && high && !mid) return "voice.bassTreble";
+  if (bass && !mid && !high) return "voice.bass";
+  if (!bass && !mid && high) return "voice.treble";
+  if (!bass && mid && !high) return "voice.mids";
   if (bass && mid && high) {
     const top = (["bass", "mid", "high"] as MixBandKey[]).sort((a, b) => readiness[b] - readiness[a])[0];
-    if (top === "high") return "Full mix — melody on top";
-    if (top === "bass") return "Full mix — bass line leading";
-    return "Full mix — bass, mids, and treble";
+    if (top === "high") return "voice.fullMelody";
+    if (top === "bass") return "voice.fullBass";
+    return "voice.full";
   }
-  if (bass && mid) return "Bass and mids — left hand and inner voices";
-  return "Mids and treble — melody";
+  if (bass && mid) return "voice.bassMids";
+  return "voice.midsTreble";
 }
 
 function fallbackSection(duration: number): MixSection {
@@ -247,7 +247,7 @@ function fallbackSection(duration: number): MixSection {
     presence: { bass: 0, mid: 0, high: 0 },
     readiness: { bass: 0, mid: 0, high: 0 },
     playing: { bass: false, mid: false, high: false },
-    voice: "Listening for notes",
+    voice: "voice.listening",
   };
 }
 

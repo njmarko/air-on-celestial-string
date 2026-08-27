@@ -1,7 +1,7 @@
-import { a as stampFilename, i as exportSize, n as CaptureSession, o as formatTime, r as downloadBlob, s as libraryTrack } from "./routes-BGbhVVEv.mjs";
+import { a as stampFilename, c as note, i as exportSize, l as libraryTrack, n as CaptureSession, o as formatTime, r as downloadBlob, s as EMPTY_NOTE } from "./routes-e8d26f-f.mjs";
 import { A as Scene, C as PointLight, D as RepeatWrapping, E as Raycaster, F as Texture, I as TextureLoader, L as Timer, M as SphereGeometry, N as Sprite, O as RingGeometry, P as SpriteMaterial, R as Vector2, S as PerspectiveCamera, T as PointsMaterial, a as OrbitControls, b as MeshBasicMaterial, c as BufferAttribute, d as ClampToEdgeWrapping, f as Color, g as LineSegments, h as LineBasicMaterial, i as EffectComposer, j as ShaderMaterial, k as SRGBColorSpace, l as BufferGeometry, m as Line, n as RenderPass, o as WebGLRenderer, p as Group, r as OutputPass, s as AmbientLight, t as UnrealBloomPass, u as CanvasTexture, v as MathUtils, w as Points, x as MeshStandardMaterial, y as Mesh, z as Vector3 } from "../_libs/three.mjs";
 import { t as configureTexture } from "./texture-pack-BaRlWae6.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/scene-manager-Bl42Kj7_.js
+//#region node_modules/.nitro/vite/services/ssr/assets/scene-manager-BDJVJ-qU.js
 function writeString(view, offset, value) {
 	for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
 }
@@ -402,28 +402,28 @@ function sectionFromFrames(start, end, startFrame, endFrame, energies) {
 		presence,
 		readiness,
 		playing,
-		voice: voiceLabel(playing, readiness)
+		voice: voiceKey(playing, readiness)
 	};
 }
-function voiceLabel(playing, readiness) {
+function voiceKey(playing, readiness) {
 	const { bass, mid, high } = playing;
-	if (!bass && !mid && !high) return "Quiet — waiting for notes";
-	if (bass && high && !mid) return "Bass and treble — left hand and melody";
-	if (bass && !mid && !high) return "Bass — left hand / low notes";
-	if (!bass && !mid && high) return "Treble — melody / right hand";
-	if (!bass && mid && !high) return "Mids — inner voices";
+	if (!bass && !mid && !high) return "voice.quiet";
+	if (bass && high && !mid) return "voice.bassTreble";
+	if (bass && !mid && !high) return "voice.bass";
+	if (!bass && !mid && high) return "voice.treble";
+	if (!bass && mid && !high) return "voice.mids";
 	if (bass && mid && high) {
 		const top = [
 			"bass",
 			"mid",
 			"high"
 		].sort((a, b) => readiness[b] - readiness[a])[0];
-		if (top === "high") return "Full mix — melody on top";
-		if (top === "bass") return "Full mix — bass line leading";
-		return "Full mix — bass, mids, and treble";
+		if (top === "high") return "voice.fullMelody";
+		if (top === "bass") return "voice.fullBass";
+		return "voice.full";
 	}
-	if (bass && mid) return "Bass and mids — left hand and inner voices";
-	return "Mids and treble — melody";
+	if (bass && mid) return "voice.bassMids";
+	return "voice.midsTreble";
 }
 function fallbackSection(duration) {
 	return {
@@ -452,7 +452,7 @@ function fallbackSection(duration) {
 			mid: false,
 			high: false
 		},
-		voice: "Listening for notes"
+		voice: "voice.listening"
 	};
 }
 function pickBoundaries(novelty, hopTime, duration) {
@@ -727,10 +727,10 @@ var SPIN_RATES = {
 	Neptune: 5.4
 };
 var DEFAULT_WEAVE = [{
-	a: "Mercury",
-	b: "Venus",
+	a: "Venus",
+	b: "Earth",
 	rhythm: "all",
-	color: 9357800
+	color: 9426104
 }];
 var PATH_COLORS = {
 	sun: "#e8dcc0",
@@ -787,7 +787,7 @@ var AudioManager = class {
 	hasTrack = false;
 	autoMix = true;
 	mixStatus = "idle";
-	mixNote = "";
+	mixNote = EMPTY_NOTE;
 	mixVoice = "";
 	mixIndex = 0;
 	locked = {
@@ -997,7 +997,7 @@ var AudioManager = class {
 			this.followMix(this.audio.currentTime || 0, true);
 			return;
 		}
-		this.mixNote = this.mixStatus === "live" ? "Auto mix off — sliders stay put." : this.mixNote;
+		this.mixNote = this.mixStatus === "live" ? note("mixNote.off") : this.mixNote;
 	}
 	lockBand(band) {
 		this.locked[band] = true;
@@ -1238,11 +1238,11 @@ var AudioManager = class {
 		const src = this.audio.src;
 		if (!src) {
 			this.mixStatus = "idle";
-			this.mixNote = "";
+			this.mixNote = EMPTY_NOTE;
 			return;
 		}
 		this.mixStatus = "analyzing";
-		this.mixNote = "Reading the recording for bass, mids, and treble…";
+		this.mixNote = note("mixNote.analyzing");
 		const abort = new AbortController();
 		this.mixAbort = abort;
 		this.runAnalysis(src, abort.signal);
@@ -1259,30 +1259,44 @@ var AudioManager = class {
 		} catch (error) {
 			if (signal.aborted || error instanceof DOMException && error.name === "AbortError") return;
 			this.mixStatus = "failed";
-			this.mixNote = "Could not analyse this file — sliders stay manual.";
+			this.mixNote = note("mixNote.failed");
 			this.mixProfile = null;
 		}
 	}
 	refreshMixNote() {
 		if (!this.autoMix) {
-			this.mixNote = this.mixStatus === "live" ? "Auto mix off — sliders stay put." : this.mixNote;
+			this.mixNote = this.mixStatus === "live" ? note("mixNote.off") : this.mixNote;
 			return;
 		}
 		if (this.mixStatus === "analyzing") {
-			this.mixNote = "Reading the recording for bass, mids, and treble…";
+			this.mixNote = note("mixNote.analyzing");
 			return;
 		}
 		if (this.mixStatus !== "live" || !this.mixProfile) return;
 		const section = this.mixProfile.sections[this.mixIndex];
 		if (!section) {
-			this.mixNote = "Auto mix ready.";
+			this.mixNote = note("mixNote.ready");
 			return;
 		}
 		const n = this.mixProfile.sections.length;
 		const span = `${formatTime(section.start)}–${formatTime(section.end)}`;
 		const lockedCount = BANDS.filter((key) => this.locked[key]).length;
-		const lockBit = lockedCount === 3 ? " · all bands locked" : lockedCount ? ` · ${lockedCount} locked` : "";
-		this.mixNote = `Section ${this.mixIndex + 1} of ${n} · ${span}${lockBit}`;
+		if (lockedCount === 3) this.mixNote = note("mixNote.sectionAllLocked", {
+			n: this.mixIndex + 1,
+			total: n,
+			span
+		});
+		else if (lockedCount) this.mixNote = note("mixNote.sectionLocked", {
+			n: this.mixIndex + 1,
+			total: n,
+			span,
+			locked: lockedCount
+		});
+		else this.mixNote = note("mixNote.section", {
+			n: this.mixIndex + 1,
+			total: n,
+			span
+		});
 		this.mixVoice = section.voice;
 	}
 	revokeCurrent(includeDemo = true) {
@@ -2518,12 +2532,12 @@ var SceneManager = class {
 	basePack;
 	hiPack = null;
 	hiRes = true;
-	hiResNote = "Fetching ultra maps…";
+	hiResNote = note("maps.fetching");
 	autoOrbit = false;
 	autoOrbitSpeed = .5;
 	autoOrbitDir = "ccw";
 	recording = false;
-	recordNote = "";
+	recordNote = EMPTY_NOTE;
 	videoAspect = "16:9";
 	videoQuality = "1080";
 	hiResBusy = false;
@@ -2847,7 +2861,7 @@ var SceneManager = class {
 			this.ultraAbort = null;
 			this.hiResBusy = false;
 			this.hiRes = false;
-			this.hiResNote = "2K maps";
+			this.hiResNote = note("maps.twoK");
 			this.pack = this.basePack;
 			this.applyCurrentPack();
 			try {
@@ -2860,7 +2874,7 @@ var SceneManager = class {
 			this.hiRes = true;
 			this.pack = this.hiPack;
 			this.applyCurrentPack();
-			this.hiResNote = "Ultra maps · Solar System Scope";
+			this.hiResNote = note("maps.ready");
 			try {
 				localStorage.setItem("viz-hires", "1");
 			} catch {}
@@ -2869,7 +2883,7 @@ var SceneManager = class {
 		if (!this.basePack) return;
 		this.hiResBusy = true;
 		this.hiRes = true;
-		this.hiResNote = "Fetching ultra maps…";
+		this.hiResNote = note("maps.fetching");
 		try {
 			localStorage.setItem("viz-hires", "1");
 		} catch {}
@@ -2911,31 +2925,47 @@ var SceneManager = class {
 			for await (const step of fetchHiResMaps(maxSize, signal)) {
 				if (this.disposed || signal.aborted) return;
 				if (step.phase === "start") {
-					this.hiResNote = `Fetching ${step.done + 1}/${step.total} · ${step.label}`;
+					this.hiResNote = note("maps.fetchingItem", {
+						n: step.done + 1,
+						total: step.total,
+						map: step.key
+					});
 					continue;
 				}
 				if (step.phase !== "ok" || !step.tex) {
-					this.hiResNote = `Ultra ${step.done}/${step.total} · ${step.label} skipped`;
+					this.hiResNote = note("maps.skipped", {
+						n: step.done,
+						total: step.total,
+						map: step.key
+					});
 					continue;
 				}
 				const current = maps[step.key];
 				if (current && current !== fallback.maps[step.key]) {
 					step.tex.dispose();
 					applied += 1;
-					this.hiResNote = `Ultra ${step.done}/${step.total} · ${step.label}`;
+					this.hiResNote = note("maps.ultraItem", {
+						n: step.done,
+						total: step.total,
+						map: step.key
+					});
 					continue;
 				}
 				maps[step.key] = step.tex;
 				this.applyMapKey(step.key);
 				applied += 1;
-				this.hiResNote = `Ultra ${step.done}/${step.total} · ${step.label}`;
+				this.hiResNote = note("maps.ultraItem", {
+					n: step.done,
+					total: step.total,
+					map: step.key
+				});
 			}
 			if (this.disposed || signal.aborted) return;
-			this.hiResNote = applied > 0 ? "Ultra maps · Solar System Scope" : "Ultra maps unavailable — 2K";
+			this.hiResNote = applied > 0 ? note("maps.ready") : note("maps.unavailable");
 			this.ultraComplete = applied > 0;
 		} catch {
 			if (signal.aborted || this.disposed) return;
-			this.hiResNote = applied > 0 ? "Ultra maps · Solar System Scope" : "Ultra download failed — 2K";
+			this.hiResNote = applied > 0 ? note("maps.ready") : note("maps.failed");
 		} finally {
 			this.hiResBusy = false;
 		}
@@ -2949,7 +2979,7 @@ var SceneManager = class {
 		}
 		if (!prefer) {
 			this.hiRes = false;
-			this.hiResNote = "2K maps";
+			this.hiResNote = note("maps.twoK");
 			return;
 		}
 		this.setHiRes(true);
@@ -3058,7 +3088,7 @@ var SceneManager = class {
 		const session = new CaptureSession();
 		if (!session.start(this.renderer.domElement, this.audio.captureStream(), width, height, 30)) {
 			this.restoreExportFrame();
-			this.recordNote = session.note || "This browser cannot record video.";
+			this.recordNote = session.note.key ? session.note : note("record.noSupport");
 			return;
 		}
 		this.capture = session;
@@ -3074,12 +3104,12 @@ var SceneManager = class {
 		if (!session) return;
 		const result = await session.stop();
 		if (!result) {
-			this.recordNote = "Nothing was captured.";
+			this.recordNote = note("record.nothing");
 			return;
 		}
 		const name = stampFilename(result.ext, this.audio.trackName);
 		downloadBlob(result.blob, name);
-		this.recordNote = `Saved ${name}`;
+		this.recordNote = note("record.saved", { name });
 	}
 	zoomBy(factor) {
 		const viewDir = new Vector3().subVectors(this.camera.position, this.controls.target);

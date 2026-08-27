@@ -1,4 +1,5 @@
 import { Music, Upload } from "lucide-react";
+import { useT } from "@/i18n/use-i18n";
 import { LIBRARY } from "@/lib/celestial/library";
 import { cn } from "@/lib/utils";
 
@@ -13,15 +14,20 @@ export function TrackList({
   onAdd: () => void;
   compact?: boolean;
 }) {
+  const t = useT();
+
   return (
     <div className="space-y-1">
       {LIBRARY.map((track) => {
         const active = track.id === activeId;
+        const title = t(`track.${track.id}.title`);
+        const composer = t(`track.${track.id}.composer`);
+        const detail = t(`track.${track.id}.detail`);
         return (
           <button
             key={track.id}
             type="button"
-            data-hint={`Play ${track.title} by ${track.composer}. ${track.credit}.`}
+            data-hint={t("track.playHint", { title, composer, credit: track.credit })}
             onClick={() => onPick(track.id)}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 text-left transition-colors duration-150",
@@ -31,10 +37,10 @@ export function TrackList({
           >
             <Music className="size-4 shrink-0 text-muted" strokeWidth={1.75} />
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm">{track.title}</span>
+              <span className="block truncate text-sm">{title}</span>
               <span className="block truncate text-xs text-faint">
-                {track.composer}
-                {compact ? "" : ` · ${track.detail}`}
+                {composer}
+                {compact ? "" : ` · ${detail}`}
               </span>
             </span>
           </button>
@@ -42,7 +48,7 @@ export function TrackList({
       })}
       <button
         type="button"
-        data-hint="Open a file from your device — MP3, WAV, FLAC, and similar."
+        data-hint={t("track.addHint")}
         onClick={onAdd}
         className={cn(
           "flex w-full items-center gap-3 rounded-lg px-3 text-left text-fg transition-colors duration-150 hover:bg-fg/10",
@@ -50,7 +56,7 @@ export function TrackList({
         )}
       >
         <Upload className="size-4 shrink-0 text-muted" strokeWidth={1.75} />
-        <span className="text-sm">Add a track</span>
+        <span className="text-sm">{t("track.add")}</span>
       </button>
     </div>
   );

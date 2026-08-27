@@ -1,3 +1,5 @@
+import { EMPTY_NOTE, note, type LocNote } from "./loc-note";
+
 export type VideoAspect = "16:9" | "9:16" | "1:1" | "4:3";
 export type VideoQuality = "720" | "1080" | "1440";
 
@@ -108,14 +110,14 @@ export class CaptureSession {
   startedAt = 0;
   ext: "mp4" | "webm" = "mp4";
   mime = "";
-  note = "";
+  note: LocNote = EMPTY_NOTE;
   private recorder: MediaRecorder | null = null;
   private chunks: Blob[] = [];
   private canvasStream: MediaStream | null = null;
 
   start(canvas: HTMLCanvasElement, audioStream: MediaStream, width: number, height: number, fps = 30): boolean {
     if (typeof MediaRecorder === "undefined") {
-      this.note = "This browser cannot record video.";
+      this.note = note("record.noSupport");
       return false;
     }
 
@@ -123,13 +125,13 @@ export class CaptureSession {
     try {
       canvasStream = canvas.captureStream(fps);
     } catch {
-      this.note = "Could not capture the sky — the canvas is protected.";
+      this.note = note("record.canvasProtected");
       return false;
     }
 
     const videoTrack = canvasStream.getVideoTracks()[0];
     if (!videoTrack) {
-      this.note = "Could not capture the sky.";
+      this.note = note("record.noSky");
       return false;
     }
     if ("contentHint" in videoTrack) videoTrack.contentHint = "detail";
@@ -143,7 +145,7 @@ export class CaptureSession {
     const recorder = createRecorder(mixed, width, height, hasAudio);
     if (!recorder) {
       videoTrack.stop();
-      this.note = "This browser cannot record video.";
+      this.note = note("record.noSupport");
       return false;
     }
 
@@ -152,7 +154,7 @@ export class CaptureSession {
     this.chunks = [];
     this.ext = mimeExt(recorder.mimeType);
     this.mime = recorder.mimeType || (this.ext === "mp4" ? "video/mp4" : "video/webm");
-    this.note = this.ext === "mp4" ? "MP4" : "WebM — this browser encodes WebM, not MP4";
+    this.note = this.ext === "mp4" ? note("record.formatMp4") : note("record.formatWebm");
     this.startedAt = performance.now();
     this.running = true;
 
@@ -167,7 +169,7 @@ export class CaptureSession {
     } catch {
       this.cleanupTracks();
       this.running = false;
-      this.note = "Could not start the recorder.";
+      this.note = note("record.startFailed");
       return false;
     }
     return true;

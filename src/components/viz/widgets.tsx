@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useT } from "@/i18n/use-i18n";
 import { cn } from "@/lib/utils";
 
 export function IconBtn({
@@ -204,19 +205,20 @@ export function PrimaryBtn({
 }
 
 export function MakerCredit({ className }: { className?: string }) {
+  const t = useT();
   return (
     <p className={cn("text-xs tracking-wide text-muted", className)}>
-      Made by Marko Njegomir{" "}
+      {t("credit.madeBy")} Marko Njegomir{" "}
       <a
         href="https://x.com/njmarko"
         target="_blank"
         rel="noopener noreferrer"
-        data-hint="Open Marko Njegomir on X."
+        data-hint={t("credit.handleHint")}
         className="inline-flex h-6 items-center text-fg underline decoration-border-strong underline-offset-2 transition-colors duration-150 hover:text-primary hover:decoration-primary"
       >
         @njmarko
       </a>{" "}
-      with Grok
+      {t("credit.withGrok")}
     </p>
   );
 }

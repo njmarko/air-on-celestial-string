@@ -142,7 +142,7 @@ export type WeavePair = {
 };
 
 export const DEFAULT_WEAVE: WeavePair[] = [
-  { a: "Mercury", b: "Venus", rhythm: "all", color: 0x8ec9e8 },
+  { a: "Venus", b: "Earth", rhythm: "all", color: 0x8fd4b8 },
 ];
 
 export const PATH_COLORS: Record<string, string> = {

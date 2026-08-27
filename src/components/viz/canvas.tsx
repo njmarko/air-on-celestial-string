@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/i18n/use-i18n";
 import { setEngine } from "@/lib/celestial/engine";
 import { useVizStore } from "@/store/viz-store";
 
@@ -10,6 +11,7 @@ if (typeof document !== "undefined") {
 export function VizCanvas() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     const host = hostRef.current;
@@ -68,7 +70,7 @@ export function VizCanvas() {
       <div
         ref={hostRef}
         className="absolute inset-0 bg-bg"
-        data-hint="Click a world to select it. Two selected worlds can be woven into a string. Drag to orbit the camera."
+        data-hint={t("canvas.hint")}
       >
         <canvas className="block h-full w-full" aria-hidden="true" />
       </div>
@@ -76,7 +78,7 @@ export function VizCanvas() {
       {failed ? (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-bg px-6 text-center">
           <p className="max-w-sm text-sm text-muted">
-            This visualizer needs WebGL. Try another browser, or turn on hardware acceleration.
+            {t("canvas.webgl")}
           </p>
         </div>
       ) : null}
