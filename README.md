@@ -12,6 +12,10 @@
   Made by <a href="https://x.com/njmarko">Marko Njegomir</a> with Grok
 </p>
 
+<p align="center">
+App available at this link: https://air-on-celestial-string.grok.me/
+</p>
+
 ---
 
 ## Preview
