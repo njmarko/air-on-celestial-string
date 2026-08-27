@@ -16,8 +16,6 @@
 
 ## Preview
 
-Drop a short capture of the orrery here as [`docs/preview.gif`](docs/preview.gif):
-
 <p align="center">
   <img src="docs/preview.gif" alt="Air on Celestial Strings — strings weaving between Venus and Earth" width="920" />
 </p>
