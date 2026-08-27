@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Air on Celestial Strings",
+      "hasCanvas": true,
+      "bodyTextLen": 518,
+      "bodyTextHash": "e6c5da522237352ef772e2e8f4fac02031fe8d1337add25b72a926d4d247b5ae",
+      "bodyTextPrefix": "A LIVING ORRERY Air on Celestial Strings Made by Marko Njegomir ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Air on Celestial Strings",
+      "hasCanvas": true,
+      "bodyTextLen": 518,
+      "bodyTextHash": "e6c5da522237352ef772e2e8f4fac02031fe8d1337add25b72a926d4d247b5ae",
+      "bodyTextPrefix": "A LIVING ORRERY Air on Celestial Strings Made by Marko Njegomir ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

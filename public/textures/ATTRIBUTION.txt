@@ -1,0 +1,33 @@
+Planetary maps and 8K stars/Milky Way sky from Solar System Scope
+https://www.solarsystemscope.com/textures/
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+Textures in this pack are based on NASA elevation and imagery data.
+Colors are tuned to spacecraft photography (Messenger, Viking, Cassini, Hubble).
+Optional ultra maps (8K where Solar System Scope publishes them, 4K Venus
+atmosphere) download from Wikimedia Commons copies of the same SSS files on
+first visit and are cached in the browser. Uranus and Neptune have no map
+larger than 2K on SSS.
+
+--- Audio (real performances, not MIDI) ---
+
+The Blue Danube, Op. 314 — Johann Strauss II
+Recording: Musopen orchestra. Dedicated to the public domain (CC0 1.0).
+https://commons.wikimedia.org/wiki/File:Strauss,_An_der_schönen_blauen_Donau.ogg
+
+Eine kleine Nachtmusik, K. 525, I. Allegro — Wolfgang Amadeus Mozart
+Recording: Advent Chamber Orchestra, dir. Roxanna Pavel Goldstein.
+License: CC BY-SA 2.0.
+https://commons.wikimedia.org/wiki/File:Mozart_-_Eine_kleine_Nachtmusik_-_1._Allegro.ogg
+
+Air on the G String (from BWV 1068) — Johann Sebastian Bach
+Recording: The United States Air Force Band / Air Force Strings, album Collage (2000).
+U.S. government work, public domain.
+https://commons.wikimedia.org/wiki/File:Air.ogg
+
+Moonlight Sonata, Op. 27 No. 2, I. Adagio sostenuto — Ludwig van Beethoven
+Recording: Paul Pitman for Musopen. Public domain.
+https://commons.wikimedia.org/wiki/File:Ludwig_van_Beethoven_-_sonata_no._14_in_c_sharp_minor_'moonlight',_op._27_no._2_-_i._adagio_sostenuto.ogg
+
+The compositions themselves are in the public domain.
