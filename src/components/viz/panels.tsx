@@ -213,11 +213,14 @@ export function MixPanel({ onRecordStart }: { onRecordStart?: () => void }) {
   const linesPerSec = useVizStore((s) => s.linesPerSec);
   const maxWeave = useVizStore((s) => s.maxWeave);
   const trailDuration = useVizStore((s) => s.trailDuration);
+  const pathWidth = useVizStore((s) => s.pathWidth);
+  const stringWidth = useVizStore((s) => s.stringWidth);
   const orbitMode = useVizStore((s) => s.orbitMode);
   const background = useVizStore((s) => s.background);
   const parallax = useVizStore((s) => s.parallax);
   const ambient = useVizStore((s) => s.ambient);
   const bloom = useVizStore((s) => s.bloom);
+  const antialias = useVizStore((s) => s.antialias);
   const ringBrightness = useVizStore((s) => s.ringBrightness);
   const hiRes = useVizStore((s) => s.hiRes);
   const hiResNote = useVizStore((s) => s.hiResNote);
@@ -323,6 +326,16 @@ export function MixPanel({ onRecordStart }: { onRecordStart?: () => void }) {
           display={t("mix.trailDisplay", { n: Math.round(trailDuration) })}
           onChange={(value) => act((engine) => engine.setTrailDuration(value))}
         />
+        <RangeField
+          label={t("mix.stringWidth")}
+          hint={t("mix.stringWidthHint")}
+          min={0.5}
+          max={16}
+          step={0.25}
+          value={stringWidth}
+          display={t("mix.widthDisplay", { n: stringWidth.toFixed(2) })}
+          onChange={(value) => act((engine) => engine.setStringWidth(value))}
+        />
 
         <Segmented<OrbitMode>
           label={t("mix.paths")}
@@ -333,6 +346,16 @@ export function MixPanel({ onRecordStart }: { onRecordStart?: () => void }) {
           ]}
           value={orbitMode}
           onChange={(value) => act((engine) => engine.setOrbitMode(value))}
+        />
+        <RangeField
+          label={t("mix.pathWidth")}
+          hint={t("mix.pathWidthHint")}
+          min={0.5}
+          max={12}
+          step={0.25}
+          value={pathWidth}
+          display={t("mix.widthDisplay", { n: pathWidth.toFixed(2) })}
+          onChange={(value) => act((engine) => engine.setPathWidth(value))}
         />
         <Segmented<BackgroundType>
           label={t("mix.sky")}
@@ -379,6 +402,12 @@ export function MixPanel({ onRecordStart }: { onRecordStart?: () => void }) {
           value={bloom}
           display={bloom.toFixed(2)}
           onChange={(value) => act((engine) => engine.setBloom(value))}
+        />
+        <ToggleRow
+          label={t("mix.aa")}
+          hint={t("mix.aaHint")}
+          checked={antialias}
+          onChange={(value) => act((engine) => engine.setAntialias(value))}
         />
         <RangeField
           label={t("mix.rings")}

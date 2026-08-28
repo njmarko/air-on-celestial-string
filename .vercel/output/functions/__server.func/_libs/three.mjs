@@ -16121,344 +16121,6 @@ var Frustum = class {
 	}
 };
 /**
-* A material for rendering line primitives.
-*
-* Materials define the appearance of renderable 3D objects.
-*
-* ```js
-* const material = new THREE.LineBasicMaterial( { color: 0xffffff } );
-* ```
-*
-* @augments Material
-*/
-var LineBasicMaterial = class extends Material {
-	/**
-	* Constructs a new line basic material.
-	*
-	* @param {Object} [parameters] - An object with one or more properties
-	* defining the material's appearance. Any property of the material
-	* (including any property from inherited materials) can be passed
-	* in here. Color values can be passed any type of value accepted
-	* by {@link Color#set}.
-	*/
-	constructor(parameters) {
-		super();
-		/**
-		* This flag can be used for type testing.
-		*
-		* @type {boolean}
-		* @readonly
-		* @default true
-		*/
-		this.isLineBasicMaterial = true;
-		this.type = "LineBasicMaterial";
-		/**
-		* Color of the material.
-		*
-		* @type {Color}
-		* @default (1,1,1)
-		*/
-		this.color = new Color(16777215);
-		/**
-		* Sets the color of the lines using data from a texture. The texture map
-		* color is modulated by the diffuse `color`.
-		*
-		* `map` represents color data, and the texture must be assigned a
-		* {@link Texture#colorSpace}. Most `map` textures set
-		* `texture.colorSpace = SRGBColorSpace`.
-		*
-		* @type {?Texture}
-		* @default null
-		*/
-		this.map = null;
-		/**
-		* Controls line thickness or lines.
-		*
-		* Can only be used with {@link SVGRenderer}. WebGL and WebGPU
-		* ignore this setting and always render line primitives with a
-		* width of one pixel.
-		*
-		* @type {number}
-		* @default 1
-		*/
-		this.linewidth = 1;
-		/**
-		* Defines appearance of line ends.
-		*
-		* Can only be used with {@link SVGRenderer}.
-		*
-		* @type {('butt'|'round'|'square')}
-		* @default 'round'
-		*/
-		this.linecap = "round";
-		/**
-		* Defines appearance of line joints.
-		*
-		* Can only be used with {@link SVGRenderer}.
-		*
-		* @type {('round'|'bevel'|'miter')}
-		* @default 'round'
-		*/
-		this.linejoin = "round";
-		/**
-		* Whether the material is affected by fog or not.
-		*
-		* @type {boolean}
-		* @default true
-		*/
-		this.fog = true;
-		this.setValues(parameters);
-	}
-	copy(source) {
-		super.copy(source);
-		this.color.copy(source.color);
-		this.map = source.map;
-		this.linewidth = source.linewidth;
-		this.linecap = source.linecap;
-		this.linejoin = source.linejoin;
-		this.fog = source.fog;
-		return this;
-	}
-};
-var _vStart = /*@__PURE__*/ new Vector3();
-var _vEnd = /*@__PURE__*/ new Vector3();
-var _inverseMatrix$1 = /*@__PURE__*/ new Matrix4();
-var _ray$1 = /*@__PURE__*/ new Ray();
-var _sphere$1 = /*@__PURE__*/ new Sphere();
-var _intersectPointOnRay = /*@__PURE__*/ new Vector3();
-var _intersectPointOnSegment = /*@__PURE__*/ new Vector3();
-/**
-* A continuous line. The line are rendered by connecting consecutive
-* vertices with straight lines.
-*
-* ```js
-* const material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
-*
-* const points = [];
-* points.push( new THREE.Vector3( - 10, 0, 0 ) );
-* points.push( new THREE.Vector3( 0, 10, 0 ) );
-* points.push( new THREE.Vector3( 10, 0, 0 ) );
-*
-* const geometry = new THREE.BufferGeometry().setFromPoints( points );
-*
-* const line = new THREE.Line( geometry, material );
-* scene.add( line );
-* ```
-*
-* @augments Object3D
-*/
-var Line = class extends Object3D {
-	/**
-	* Constructs a new line.
-	*
-	* @param {BufferGeometry} [geometry] - The line geometry.
-	* @param {Material|Array<Material>} [material] - The line material.
-	*/
-	constructor(geometry = new BufferGeometry(), material = new LineBasicMaterial()) {
-		super();
-		/**
-		* This flag can be used for type testing.
-		*
-		* @type {boolean}
-		* @readonly
-		* @default true
-		*/
-		this.isLine = true;
-		this.type = "Line";
-		/**
-		* The line geometry.
-		*
-		* @type {BufferGeometry}
-		*/
-		this.geometry = geometry;
-		/**
-		* The line material.
-		*
-		* @type {Material|Array<Material>}
-		* @default LineBasicMaterial
-		*/
-		this.material = material;
-		/**
-		* A dictionary representing the morph targets in the geometry. The key is the
-		* morph targets name, the value its attribute index. This member is `undefined`
-		* by default and only set when morph targets are detected in the geometry.
-		*
-		* @type {Object<string,number>|undefined}
-		* @default undefined
-		*/
-		this.morphTargetDictionary = void 0;
-		/**
-		* An array of weights typically in the range `[0,1]` that specify how much of the morph
-		* is applied. This member is `undefined` by default and only set when morph targets are
-		* detected in the geometry.
-		*
-		* @type {Array<number>|undefined}
-		* @default undefined
-		*/
-		this.morphTargetInfluences = void 0;
-		this.updateMorphTargets();
-	}
-	copy(source, recursive) {
-		super.copy(source, recursive);
-		this.material = Array.isArray(source.material) ? source.material.slice() : source.material;
-		this.geometry = source.geometry;
-		return this;
-	}
-	/**
-	* Computes an array of distance values which are necessary for rendering dashed lines.
-	* For each vertex in the geometry, the method calculates the cumulative length from the
-	* current point to the very beginning of the line.
-	*
-	* @return {Line} A reference to this line.
-	*/
-	computeLineDistances() {
-		const geometry = this.geometry;
-		if (geometry.index === null) {
-			const positionAttribute = geometry.attributes.position;
-			const lineDistances = [0];
-			for (let i = 1, l = positionAttribute.count; i < l; i++) {
-				_vStart.fromBufferAttribute(positionAttribute, i - 1);
-				_vEnd.fromBufferAttribute(positionAttribute, i);
-				lineDistances[i] = lineDistances[i - 1];
-				lineDistances[i] += _vStart.distanceTo(_vEnd);
-			}
-			geometry.setAttribute("lineDistance", new Float32BufferAttribute(lineDistances, 1));
-		} else warn("Line.computeLineDistances(): Computation only possible with non-indexed BufferGeometry.");
-		return this;
-	}
-	/**
-	* Computes intersection points between a casted ray and this line.
-	*
-	* @param {Raycaster} raycaster - The raycaster.
-	* @param {Array<Object>} intersects - The target array that holds the intersection points.
-	*/
-	raycast(raycaster, intersects) {
-		const geometry = this.geometry;
-		const matrixWorld = this.matrixWorld;
-		const threshold = raycaster.params.Line.threshold;
-		const drawRange = geometry.drawRange;
-		if (geometry.boundingSphere === null) geometry.computeBoundingSphere();
-		_sphere$1.copy(geometry.boundingSphere);
-		_sphere$1.applyMatrix4(matrixWorld);
-		_sphere$1.radius += threshold;
-		if (raycaster.ray.intersectsSphere(_sphere$1) === false) return;
-		_inverseMatrix$1.copy(matrixWorld).invert();
-		_ray$1.copy(raycaster.ray).applyMatrix4(_inverseMatrix$1);
-		const localThreshold = threshold / ((this.scale.x + this.scale.y + this.scale.z) / 3);
-		const localThresholdSq = localThreshold * localThreshold;
-		const step = this.isLineSegments ? 2 : 1;
-		const index = geometry.index;
-		const positionAttribute = geometry.attributes.position;
-		if (index !== null) {
-			const start = Math.max(0, drawRange.start);
-			const end = Math.min(index.count, drawRange.start + drawRange.count);
-			for (let i = start, l = end - 1; i < l; i += step) {
-				const a = index.getX(i);
-				const b = index.getX(i + 1);
-				const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, a, b, i);
-				if (intersect) intersects.push(intersect);
-			}
-			if (this.isLineLoop) {
-				const a = index.getX(end - 1);
-				const b = index.getX(start);
-				const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, a, b, end - 1);
-				if (intersect) intersects.push(intersect);
-			}
-		} else {
-			const start = Math.max(0, drawRange.start);
-			const end = Math.min(positionAttribute.count, drawRange.start + drawRange.count);
-			for (let i = start, l = end - 1; i < l; i += step) {
-				const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, i, i + 1, i);
-				if (intersect) intersects.push(intersect);
-			}
-			if (this.isLineLoop) {
-				const intersect = checkIntersection(this, raycaster, _ray$1, localThresholdSq, end - 1, start, end - 1);
-				if (intersect) intersects.push(intersect);
-			}
-		}
-	}
-	/**
-	* Sets the values of {@link Line#morphTargetDictionary} and {@link Line#morphTargetInfluences}
-	* to make sure existing morph targets can influence this 3D object.
-	*/
-	updateMorphTargets() {
-		const morphAttributes = this.geometry.morphAttributes;
-		const keys = Object.keys(morphAttributes);
-		if (keys.length > 0) {
-			const morphAttribute = morphAttributes[keys[0]];
-			if (morphAttribute !== void 0) {
-				this.morphTargetInfluences = [];
-				this.morphTargetDictionary = {};
-				for (let m = 0, ml = morphAttribute.length; m < ml; m++) {
-					const name = morphAttribute[m].name || String(m);
-					this.morphTargetInfluences.push(0);
-					this.morphTargetDictionary[name] = m;
-				}
-			}
-		}
-	}
-};
-function checkIntersection(object, raycaster, ray, thresholdSq, a, b, i) {
-	const positionAttribute = object.geometry.attributes.position;
-	_vStart.fromBufferAttribute(positionAttribute, a);
-	_vEnd.fromBufferAttribute(positionAttribute, b);
-	if (ray.distanceSqToSegment(_vStart, _vEnd, _intersectPointOnRay, _intersectPointOnSegment) > thresholdSq) return;
-	_intersectPointOnRay.applyMatrix4(object.matrixWorld);
-	const distance = raycaster.ray.origin.distanceTo(_intersectPointOnRay);
-	if (distance < raycaster.near || distance > raycaster.far) return;
-	return {
-		distance,
-		point: _intersectPointOnSegment.clone().applyMatrix4(object.matrixWorld),
-		index: i,
-		face: null,
-		faceIndex: null,
-		barycoord: null,
-		object
-	};
-}
-var _start = /*@__PURE__*/ new Vector3();
-var _end = /*@__PURE__*/ new Vector3();
-/**
-* A series of lines drawn between pairs of vertices.
-*
-* @augments Line
-*/
-var LineSegments = class extends Line {
-	/**
-	* Constructs a new line segments.
-	*
-	* @param {BufferGeometry} [geometry] - The line geometry.
-	* @param {Material|Array<Material>} [material] - The line material.
-	*/
-	constructor(geometry, material) {
-		super(geometry, material);
-		/**
-		* This flag can be used for type testing.
-		*
-		* @type {boolean}
-		* @readonly
-		* @default true
-		*/
-		this.isLineSegments = true;
-		this.type = "LineSegments";
-	}
-	computeLineDistances() {
-		const geometry = this.geometry;
-		if (geometry.index === null) {
-			const positionAttribute = geometry.attributes.position;
-			const lineDistances = [];
-			for (let i = 0, l = positionAttribute.count; i < l; i += 2) {
-				_start.fromBufferAttribute(positionAttribute, i);
-				_end.fromBufferAttribute(positionAttribute, i + 1);
-				lineDistances[i] = i === 0 ? 0 : lineDistances[i - 1];
-				lineDistances[i + 1] = lineDistances[i] + _start.distanceTo(_end);
-			}
-			geometry.setAttribute("lineDistance", new Float32BufferAttribute(lineDistances, 1));
-		} else warn("LineSegments.computeLineDistances(): Computation only possible with non-indexed BufferGeometry.");
-		return this;
-	}
-};
-/**
 * A material for rendering point primitives.
 *
 * Materials define the appearance of renderable 3D objects.
@@ -16579,7 +16241,7 @@ var PointsMaterial = class extends Material {
 };
 var _inverseMatrix = /*@__PURE__*/ new Matrix4();
 var _ray$2 = /*@__PURE__*/ new Ray();
-var _sphere = /*@__PURE__*/ new Sphere();
+var _sphere$1 = /*@__PURE__*/ new Sphere();
 var _position$3 = /*@__PURE__*/ new Vector3();
 /**
 * A class for displaying points or point clouds.
@@ -16655,10 +16317,10 @@ var Points = class extends Object3D {
 		const threshold = raycaster.params.Points.threshold;
 		const drawRange = geometry.drawRange;
 		if (geometry.boundingSphere === null) geometry.computeBoundingSphere();
-		_sphere.copy(geometry.boundingSphere);
-		_sphere.applyMatrix4(matrixWorld);
-		_sphere.radius += threshold;
-		if (raycaster.ray.intersectsSphere(_sphere) === false) return;
+		_sphere$1.copy(geometry.boundingSphere);
+		_sphere$1.applyMatrix4(matrixWorld);
+		_sphere$1.radius += threshold;
+		if (raycaster.ray.intersectsSphere(_sphere$1) === false) return;
 		_inverseMatrix.copy(matrixWorld).invert();
 		_ray$2.copy(raycaster.ray).applyMatrix4(_inverseMatrix);
 		const localThreshold = threshold / ((this.scale.x + this.scale.y + this.scale.z) / 3);
@@ -17416,6 +17078,104 @@ var SphereGeometry = class SphereGeometry extends BufferGeometry {
 		return new SphereGeometry(data.radius, data.widthSegments, data.heightSegments, data.phiStart, data.phiLength, data.thetaStart, data.thetaLength);
 	}
 };
+/**
+* Can be used as a helper object to visualize a geometry as a wireframe.
+*
+* ```js
+* const geometry = new THREE.SphereGeometry();
+*
+* const wireframe = new THREE.WireframeGeometry( geometry );
+*
+* const line = new THREE.LineSegments( wireframe );
+* line.material.depthWrite = false;
+* line.material.opacity = 0.25;
+* line.material.transparent = true;
+*
+* scene.add( line );
+* ```
+*
+* Note: It is not yet possible to serialize/deserialize instances of this class.
+*
+* @augments BufferGeometry
+*/
+var WireframeGeometry = class extends BufferGeometry {
+	/**
+	* Constructs a new wireframe geometry.
+	*
+	* @param {?BufferGeometry} [geometry=null] - The geometry.
+	*/
+	constructor(geometry = null) {
+		super();
+		this.type = "WireframeGeometry";
+		/**
+		* Holds the constructor parameters that have been
+		* used to generate the geometry. Any modification
+		* after instantiation does not change the geometry.
+		*
+		* @type {Object}
+		*/
+		this.parameters = { geometry };
+		if (geometry !== null) {
+			const vertices = [];
+			const edges = /* @__PURE__ */ new Set();
+			const start = new Vector3();
+			const end = new Vector3();
+			if (geometry.index !== null) {
+				const position = geometry.attributes.position;
+				const indices = geometry.index;
+				let groups = geometry.groups;
+				if (groups.length === 0) groups = [{
+					start: 0,
+					count: indices.count,
+					materialIndex: 0
+				}];
+				for (let o = 0, ol = groups.length; o < ol; ++o) {
+					const group = groups[o];
+					const groupStart = group.start;
+					const groupCount = group.count;
+					for (let i = groupStart, l = groupStart + groupCount; i < l; i += 3) for (let j = 0; j < 3; j++) {
+						const index1 = indices.getX(i + j);
+						const index2 = indices.getX(i + (j + 1) % 3);
+						start.fromBufferAttribute(position, index1);
+						end.fromBufferAttribute(position, index2);
+						if (isUniqueEdge(start, end, edges) === true) {
+							vertices.push(start.x, start.y, start.z);
+							vertices.push(end.x, end.y, end.z);
+						}
+					}
+				}
+			} else {
+				const position = geometry.attributes.position;
+				for (let i = 0, l = position.count / 3; i < l; i++) for (let j = 0; j < 3; j++) {
+					const index1 = 3 * i + j;
+					const index2 = 3 * i + (j + 1) % 3;
+					start.fromBufferAttribute(position, index1);
+					end.fromBufferAttribute(position, index2);
+					if (isUniqueEdge(start, end, edges) === true) {
+						vertices.push(start.x, start.y, start.z);
+						vertices.push(end.x, end.y, end.z);
+					}
+				}
+			}
+			this.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+		}
+	}
+	copy(source) {
+		super.copy(source);
+		this.parameters = Object.assign({}, source.parameters);
+		return this;
+	}
+};
+function isUniqueEdge(start, end, edges) {
+	const hash1 = `${start.x},${start.y},${start.z}-${end.x},${end.y},${end.z}`;
+	const hash2 = `${end.x},${end.y},${end.z}-${start.x},${start.y},${start.z}`;
+	if (edges.has(hash1) === true || edges.has(hash2) === true) return false;
+	else {
+		edges.add(hash1);
+		edges.add(hash2);
+		return true;
+	}
+}
 /**
 * Provides utility functions for managing uniforms.
 *
@@ -21134,6 +20894,44 @@ var AmbientLight = class extends Light {
 		this.type = "AmbientLight";
 	}
 };
+/**
+* An instanced version of a geometry.
+*/
+var InstancedBufferGeometry = class extends BufferGeometry {
+	/**
+	* Constructs a new instanced buffer geometry.
+	*/
+	constructor() {
+		super();
+		/**
+		* This flag can be used for type testing.
+		*
+		* @type {boolean}
+		* @readonly
+		* @default true
+		*/
+		this.isInstancedBufferGeometry = true;
+		this.type = "InstancedBufferGeometry";
+		/**
+		* The instance count.
+		*
+		* @type {number}
+		* @default Infinity
+		*/
+		this.instanceCount = Infinity;
+	}
+	copy(source) {
+		super.copy(source);
+		this.instanceCount = source.instanceCount;
+		return this;
+	}
+	toJSON() {
+		const data = super.toJSON();
+		data.instanceCount = this.instanceCount;
+		data.isInstancedBufferGeometry = true;
+		return data;
+	}
+};
 var fov = -90;
 var aspect = 1;
 /**
@@ -21874,6 +21672,55 @@ PropertyBinding.prototype.SetterByBindingTypeAndVersioning = [
 		PropertyBinding.prototype._setValue_fromArray_setMatrixWorldNeedsUpdate
 	]
 ];
+/**
+* An instanced version of an interleaved buffer.
+*
+* @augments InterleavedBuffer
+*/
+var InstancedInterleavedBuffer = class extends InterleavedBuffer {
+	/**
+	* Constructs a new instanced interleaved buffer.
+	*
+	* @param {TypedArray} array - A typed array with a shared buffer storing attribute data.
+	* @param {number} stride - The number of typed-array elements per vertex.
+	* @param {number} [meshPerAttribute=1] - Defines how often a value of this interleaved buffer should be repeated.
+	*/
+	constructor(array, stride, meshPerAttribute = 1) {
+		super(array, stride);
+		/**
+		* This flag can be used for type testing.
+		*
+		* @type {boolean}
+		* @readonly
+		* @default true
+		*/
+		this.isInstancedInterleavedBuffer = true;
+		/**
+		* Defines how often a value of this buffer attribute should be repeated,
+		* see {@link InstancedBufferAttribute#meshPerAttribute}.
+		*
+		* @type {number}
+		* @default 1
+		*/
+		this.meshPerAttribute = meshPerAttribute;
+	}
+	copy(source) {
+		super.copy(source);
+		this.meshPerAttribute = source.meshPerAttribute;
+		return this;
+	}
+	clone(data) {
+		const ib = super.clone(data);
+		ib.meshPerAttribute = this.meshPerAttribute;
+		return ib;
+	}
+	toJSON(data) {
+		const json = super.toJSON(data);
+		json.isInstancedInterleavedBuffer = true;
+		json.meshPerAttribute = this.meshPerAttribute;
+		return json;
+	}
+};
 var _matrix = /*@__PURE__*/ new Matrix4();
 /**
 * This class is designed to assist with raycasting. Raycasting is used for
@@ -22247,6 +22094,216 @@ var Spherical = class {
 		return this;
 	}
 });
+var _startP = /*@__PURE__*/ new Vector3();
+var _startEnd = /*@__PURE__*/ new Vector3();
+var _d1 = /*@__PURE__*/ new Vector3();
+var _d2 = /*@__PURE__*/ new Vector3();
+var _r = /*@__PURE__*/ new Vector3();
+var _c1 = /*@__PURE__*/ new Vector3();
+var _c2 = /*@__PURE__*/ new Vector3();
+/**
+* An analytical line segment in 3D space represented by a start and end point.
+*/
+var Line3 = class {
+	/**
+	* Constructs a new line segment.
+	*
+	* @param {Vector3} [start=(0,0,0)] - Start of the line segment.
+	* @param {Vector3} [end=(0,0,0)] - End of the line segment.
+	*/
+	constructor(start = new Vector3(), end = new Vector3()) {
+		/**
+		* Start of the line segment.
+		*
+		* @type {Vector3}
+		*/
+		this.start = start;
+		/**
+		* End of the line segment.
+		*
+		* @type {Vector3}
+		*/
+		this.end = end;
+	}
+	/**
+	* Sets the start and end values by copying the given vectors.
+	*
+	* @param {Vector3} start - The start point.
+	* @param {Vector3} end - The end point.
+	* @return {Line3} A reference to this line segment.
+	*/
+	set(start, end) {
+		this.start.copy(start);
+		this.end.copy(end);
+		return this;
+	}
+	/**
+	* Copies the values of the given line segment to this instance.
+	*
+	* @param {Line3} line - The line segment to copy.
+	* @return {Line3} A reference to this line segment.
+	*/
+	copy(line) {
+		this.start.copy(line.start);
+		this.end.copy(line.end);
+		return this;
+	}
+	/**
+	* Returns the center of the line segment.
+	*
+	* @param {Vector3} target - The target vector that is used to store the method's result.
+	* @return {Vector3} The center point.
+	*/
+	getCenter(target) {
+		return target.addVectors(this.start, this.end).multiplyScalar(.5);
+	}
+	/**
+	* Returns the delta vector of the line segment's start and end point.
+	*
+	* @param {Vector3} target - The target vector that is used to store the method's result.
+	* @return {Vector3} The delta vector.
+	*/
+	delta(target) {
+		return target.subVectors(this.end, this.start);
+	}
+	/**
+	* Returns the squared Euclidean distance between the line' start and end point.
+	*
+	* @return {number} The squared Euclidean distance.
+	*/
+	distanceSq() {
+		return this.start.distanceToSquared(this.end);
+	}
+	/**
+	* Returns the Euclidean distance between the line' start and end point.
+	*
+	* @return {number} The Euclidean distance.
+	*/
+	distance() {
+		return this.start.distanceTo(this.end);
+	}
+	/**
+	* Returns a vector at a certain position along the line segment.
+	*
+	* @param {number} t - A value between `[0,1]` to represent a position along the line segment.
+	* @param {Vector3} target - The target vector that is used to store the method's result.
+	* @return {Vector3} The delta vector.
+	*/
+	at(t, target) {
+		return this.delta(target).multiplyScalar(t).add(this.start);
+	}
+	/**
+	* Returns a point parameter based on the closest point as projected on the line segment.
+	*
+	* @param {Vector3} point - The point for which to return a point parameter.
+	* @param {boolean} clampToLine - Whether to clamp the result to the range `[0,1]` or not.
+	* @return {number} The point parameter.
+	*/
+	closestPointToPointParameter(point, clampToLine) {
+		_startP.subVectors(point, this.start);
+		_startEnd.subVectors(this.end, this.start);
+		const startEnd2 = _startEnd.dot(_startEnd);
+		if (startEnd2 === 0) return 0;
+		let t = _startEnd.dot(_startP) / startEnd2;
+		if (clampToLine) t = clamp(t, 0, 1);
+		return t;
+	}
+	/**
+	* Returns the closest point on the line for a given point.
+	*
+	* @param {Vector3} point - The point to compute the closest point on the line for.
+	* @param {boolean} clampToLine - Whether to clamp the result to the range `[0,1]` or not.
+	* @param {Vector3} target - The target vector that is used to store the method's result.
+	* @return {Vector3} The closest point on the line.
+	*/
+	closestPointToPoint(point, clampToLine, target) {
+		const t = this.closestPointToPointParameter(point, clampToLine);
+		return this.delta(target).multiplyScalar(t).add(this.start);
+	}
+	/**
+	* Returns the closest squared distance between this line segment and the given one.
+	*
+	* @param {Line3} line - The line segment to compute the closest squared distance to.
+	* @param {Vector3} [c1] - The closest point on this line segment.
+	* @param {Vector3} [c2] - The closest point on the given line segment.
+	* @return {number} The squared distance between this line segment and the given one.
+	*/
+	distanceSqToLine3(line, c1 = _c1, c2 = _c2) {
+		const EPSILON = 1e-8 * 1e-8;
+		let s, t;
+		const p1 = this.start;
+		const p2 = line.start;
+		const q1 = this.end;
+		const q2 = line.end;
+		_d1.subVectors(q1, p1);
+		_d2.subVectors(q2, p2);
+		_r.subVectors(p1, p2);
+		const a = _d1.dot(_d1);
+		const e = _d2.dot(_d2);
+		const f = _d2.dot(_r);
+		if (a <= EPSILON && e <= EPSILON) {
+			c1.copy(p1);
+			c2.copy(p2);
+			c1.sub(c2);
+			return c1.dot(c1);
+		}
+		if (a <= EPSILON) {
+			s = 0;
+			t = f / e;
+			t = clamp(t, 0, 1);
+		} else {
+			const c = _d1.dot(_r);
+			if (e <= EPSILON) {
+				t = 0;
+				s = clamp(-c / a, 0, 1);
+			} else {
+				const b = _d1.dot(_d2);
+				const denom = a * e - b * b;
+				if (denom !== 0) s = clamp((b * f - c * e) / denom, 0, 1);
+				else s = 0;
+				t = (b * s + f) / e;
+				if (t < 0) {
+					t = 0;
+					s = clamp(-c / a, 0, 1);
+				} else if (t > 1) {
+					t = 1;
+					s = clamp((b - c) / a, 0, 1);
+				}
+			}
+		}
+		c1.copy(p1).addScaledVector(_d1, s);
+		c2.copy(p2).addScaledVector(_d2, t);
+		return c1.distanceToSquared(c2);
+	}
+	/**
+	* Applies a 4x4 transformation matrix to this line segment.
+	*
+	* @param {Matrix4} matrix - The transformation matrix.
+	* @return {Line3} A reference to this line segment.
+	*/
+	applyMatrix4(matrix) {
+		this.start.applyMatrix4(matrix);
+		this.end.applyMatrix4(matrix);
+		return this;
+	}
+	/**
+	* Returns `true` if this line segment is equal with the given one.
+	*
+	* @param {Line3} line - The line segment to test for equality.
+	* @return {boolean} Whether this line segment is equal with the given one.
+	*/
+	equals(line) {
+		return line.start.equals(this.start) && line.end.equals(this.end);
+	}
+	/**
+	* Returns a new line segment with copied values from this instance.
+	*
+	* @return {Line3} A clone of this instance.
+	*/
+	clone() {
+		return new this.constructor().copy(this);
+	}
+};
 /**
 * Abstract base class for controls.
 *
@@ -33330,7 +33387,7 @@ var _startEvent = { type: "start" };
 * @type {Object}
 */
 var _endEvent = { type: "end" };
-var _ray = new Ray();
+var _ray$1 = new Ray();
 var _plane = new Plane();
 var _TILT_LIMIT = Math.cos(70 * MathUtils.DEG2RAD);
 var _v = new Vector3();
@@ -33926,12 +33983,12 @@ var OrbitControls = class extends Controls {
 			if (newRadius !== null) {
 				if (this.screenSpacePanning) this.target.set(0, 0, -1).transformDirection(this.object.matrix).multiplyScalar(newRadius).add(this.object.position);
 				else {
-					_ray.origin.copy(this.object.position);
-					_ray.direction.set(0, 0, -1).transformDirection(this.object.matrix);
-					if (Math.abs(this.object.up.dot(_ray.direction)) < _TILT_LIMIT) this.object.lookAt(this.target);
+					_ray$1.origin.copy(this.object.position);
+					_ray$1.direction.set(0, 0, -1).transformDirection(this.object.matrix);
+					if (Math.abs(this.object.up.dot(_ray$1.direction)) < _TILT_LIMIT) this.object.lookAt(this.target);
 					else {
 						_plane.setFromNormalAndCoplanarPoint(this.object.up, this.target);
-						_ray.intersectPlane(_plane, this.target);
+						_ray$1.intersectPlane(_plane, this.target);
 					}
 				}
 			}
@@ -35102,6 +35159,322 @@ var EffectComposer = class {
 	}
 };
 //#endregion
+//#region node_modules/three/examples/jsm/shaders/FXAAShader.js
+/**
+* @module FXAAShader
+* @three_import import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+*/
+/**
+* FXAA algorithm from NVIDIA, C# implementation by Jasper Flick, GLSL port by Dave Hoskins.
+*
+* References:
+* - {@link http://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf}.
+* - {@link https://catlikecoding.com/unity/tutorials/advanced-rendering/fxaa/}.
+*
+* @constant
+* @type {ShaderMaterial~Shader}
+*/
+var FXAAShader = {
+	name: "FXAAShader",
+	uniforms: {
+		"tDiffuse": { value: null },
+		"resolution": { value: new Vector2(1 / 1024, 1 / 512) }
+	},
+	vertexShader: `
+
+		varying vec2 vUv;
+
+		void main() {
+
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+		}`,
+	fragmentShader: `
+
+		uniform sampler2D tDiffuse;
+		uniform vec2 resolution;
+		varying vec2 vUv;
+
+		#define EDGE_STEP_COUNT 6
+		#define EDGE_GUESS 8.0
+		#define EDGE_STEPS 1.0, 1.5, 2.0, 2.0, 2.0, 4.0
+		const float edgeSteps[EDGE_STEP_COUNT] = float[EDGE_STEP_COUNT]( EDGE_STEPS );
+
+		float _ContrastThreshold = 0.0312;
+		float _RelativeThreshold = 0.063;
+		float _SubpixelBlending = 1.0;
+
+		vec4 Sample( sampler2D  tex2D, vec2 uv ) {
+
+			return texture( tex2D, uv );
+
+		}
+
+		float SampleLuminance( sampler2D tex2D, vec2 uv ) {
+
+			return dot( Sample( tex2D, uv ).rgb, vec3( 0.3, 0.59, 0.11 ) );
+
+		}
+
+		float SampleLuminance( sampler2D tex2D, vec2 texSize, vec2 uv, float uOffset, float vOffset ) {
+
+			uv += texSize * vec2(uOffset, vOffset);
+			return SampleLuminance(tex2D, uv);
+
+		}
+
+		struct LuminanceData {
+
+			float m, n, e, s, w;
+			float ne, nw, se, sw;
+			float highest, lowest, contrast;
+
+		};
+
+		LuminanceData SampleLuminanceNeighborhood( sampler2D tex2D, vec2 texSize, vec2 uv ) {
+
+			LuminanceData l;
+			l.m = SampleLuminance( tex2D, uv );
+			l.n = SampleLuminance( tex2D, texSize, uv,  0.0,  1.0 );
+			l.e = SampleLuminance( tex2D, texSize, uv,  1.0,  0.0 );
+			l.s = SampleLuminance( tex2D, texSize, uv,  0.0, -1.0 );
+			l.w = SampleLuminance( tex2D, texSize, uv, -1.0,  0.0 );
+
+			l.ne = SampleLuminance( tex2D, texSize, uv,  1.0,  1.0 );
+			l.nw = SampleLuminance( tex2D, texSize, uv, -1.0,  1.0 );
+			l.se = SampleLuminance( tex2D, texSize, uv,  1.0, -1.0 );
+			l.sw = SampleLuminance( tex2D, texSize, uv, -1.0, -1.0 );
+
+			l.highest = max( max( max( max( l.n, l.e ), l.s ), l.w ), l.m );
+			l.lowest = min( min( min( min( l.n, l.e ), l.s ), l.w ), l.m );
+			l.contrast = l.highest - l.lowest;
+			return l;
+
+		}
+
+		bool ShouldSkipPixel( LuminanceData l ) {
+
+			float threshold = max( _ContrastThreshold, _RelativeThreshold * l.highest );
+			return l.contrast < threshold;
+
+		}
+
+		float DeterminePixelBlendFactor( LuminanceData l ) {
+
+			float f = 2.0 * ( l.n + l.e + l.s + l.w );
+			f += l.ne + l.nw + l.se + l.sw;
+			f *= 1.0 / 12.0;
+			f = abs( f - l.m );
+			f = clamp( f / l.contrast, 0.0, 1.0 );
+
+			float blendFactor = smoothstep( 0.0, 1.0, f );
+			return blendFactor * blendFactor * _SubpixelBlending;
+
+		}
+
+		struct EdgeData {
+
+			bool isHorizontal;
+			float pixelStep;
+			float oppositeLuminance, gradient;
+
+		};
+
+		EdgeData DetermineEdge( vec2 texSize, LuminanceData l ) {
+
+			EdgeData e;
+			float horizontal =
+				abs( l.n + l.s - 2.0 * l.m ) * 2.0 +
+				abs( l.ne + l.se - 2.0 * l.e ) +
+				abs( l.nw + l.sw - 2.0 * l.w );
+			float vertical =
+				abs( l.e + l.w - 2.0 * l.m ) * 2.0 +
+				abs( l.ne + l.nw - 2.0 * l.n ) +
+				abs( l.se + l.sw - 2.0 * l.s );
+			e.isHorizontal = horizontal >= vertical;
+
+			float pLuminance = e.isHorizontal ? l.n : l.e;
+			float nLuminance = e.isHorizontal ? l.s : l.w;
+			float pGradient = abs( pLuminance - l.m );
+			float nGradient = abs( nLuminance - l.m );
+
+			e.pixelStep = e.isHorizontal ? texSize.y : texSize.x;
+
+			if (pGradient < nGradient) {
+
+				e.pixelStep = -e.pixelStep;
+				e.oppositeLuminance = nLuminance;
+				e.gradient = nGradient;
+
+			} else {
+
+				e.oppositeLuminance = pLuminance;
+				e.gradient = pGradient;
+
+			}
+
+			return e;
+
+		}
+
+		float DetermineEdgeBlendFactor( sampler2D  tex2D, vec2 texSize, LuminanceData l, EdgeData e, vec2 uv ) {
+
+			vec2 uvEdge = uv;
+			vec2 edgeStep;
+			if (e.isHorizontal) {
+
+				uvEdge.y += e.pixelStep * 0.5;
+				edgeStep = vec2( texSize.x, 0.0 );
+
+			} else {
+
+				uvEdge.x += e.pixelStep * 0.5;
+				edgeStep = vec2( 0.0, texSize.y );
+
+			}
+
+			float edgeLuminance = ( l.m + e.oppositeLuminance ) * 0.5;
+			float gradientThreshold = e.gradient * 0.25;
+
+			vec2 puv = uvEdge + edgeStep * edgeSteps[0];
+			float pLuminanceDelta = SampleLuminance( tex2D, puv ) - edgeLuminance;
+			bool pAtEnd = abs( pLuminanceDelta ) >= gradientThreshold;
+
+			for ( int i = 1; i < EDGE_STEP_COUNT && !pAtEnd; i++ ) {
+
+				puv += edgeStep * edgeSteps[i];
+				pLuminanceDelta = SampleLuminance( tex2D, puv ) - edgeLuminance;
+				pAtEnd = abs( pLuminanceDelta ) >= gradientThreshold;
+
+			}
+
+			if ( !pAtEnd ) {
+
+				puv += edgeStep * EDGE_GUESS;
+
+			}
+
+			vec2 nuv = uvEdge - edgeStep * edgeSteps[0];
+			float nLuminanceDelta = SampleLuminance( tex2D, nuv ) - edgeLuminance;
+			bool nAtEnd = abs( nLuminanceDelta ) >= gradientThreshold;
+
+			for ( int i = 1; i < EDGE_STEP_COUNT && !nAtEnd; i++ ) {
+
+				nuv -= edgeStep * edgeSteps[i];
+				nLuminanceDelta = SampleLuminance( tex2D, nuv ) - edgeLuminance;
+				nAtEnd = abs( nLuminanceDelta ) >= gradientThreshold;
+
+			}
+
+			if ( !nAtEnd ) {
+
+				nuv -= edgeStep * EDGE_GUESS;
+
+			}
+
+			float pDistance, nDistance;
+			if ( e.isHorizontal ) {
+
+				pDistance = puv.x - uv.x;
+				nDistance = uv.x - nuv.x;
+
+			} else {
+
+				pDistance = puv.y - uv.y;
+				nDistance = uv.y - nuv.y;
+
+			}
+
+			float shortestDistance;
+			bool deltaSign;
+			if ( pDistance <= nDistance ) {
+
+				shortestDistance = pDistance;
+				deltaSign = pLuminanceDelta >= 0.0;
+
+			} else {
+
+				shortestDistance = nDistance;
+				deltaSign = nLuminanceDelta >= 0.0;
+
+			}
+
+			if ( deltaSign == ( l.m - edgeLuminance >= 0.0 ) ) {
+
+				return 0.0;
+
+			}
+
+			return 0.5 - shortestDistance / ( pDistance + nDistance );
+
+		}
+
+		vec4 ApplyFXAA( sampler2D  tex2D, vec2 texSize, vec2 uv ) {
+
+			LuminanceData luminance = SampleLuminanceNeighborhood( tex2D, texSize, uv );
+			if ( ShouldSkipPixel( luminance ) ) {
+
+				return Sample( tex2D, uv );
+
+			}
+
+			float pixelBlend = DeterminePixelBlendFactor( luminance );
+			EdgeData edge = DetermineEdge( texSize, luminance );
+			float edgeBlend = DetermineEdgeBlendFactor( tex2D, texSize, luminance, edge, uv );
+			float finalBlend = max( pixelBlend, edgeBlend );
+
+			if (edge.isHorizontal) {
+
+				uv.y += edge.pixelStep * finalBlend;
+
+			} else {
+
+				uv.x += edge.pixelStep * finalBlend;
+
+			}
+
+			return Sample( tex2D, uv );
+
+		}
+
+		void main() {
+
+			gl_FragColor = ApplyFXAA( tDiffuse, resolution.xy, vUv );
+
+		}`
+};
+//#endregion
+//#region node_modules/three/examples/jsm/postprocessing/FXAAPass.js
+/**
+* A pass for applying FXAA.
+*
+* ```js
+* const fxaaPass = new FXAAPass();
+* composer.addPass( fxaaPass );
+* ```
+*
+* @augments ShaderPass
+* @three_import import { FXAAPass } from 'three/addons/postprocessing/FXAAPass.js';
+*/
+var FXAAPass = class extends ShaderPass {
+	/**
+	* Constructs a new FXAA pass.
+	*/
+	constructor() {
+		super(FXAAShader);
+	}
+	/**
+	* Sets the size of the pass.
+	*
+	* @param {number} width - The width to set.
+	* @param {number} height - The height to set.
+	*/
+	setSize(width, height) {
+		this.material.uniforms["resolution"].value.set(1 / width, 1 / height);
+	}
+};
+//#endregion
 //#region node_modules/three/examples/jsm/shaders/OutputShader.js
 /**
 * @module OutputShader
@@ -35856,4 +36229,1208 @@ var UnrealBloomPass = class UnrealBloomPass extends Pass {
 UnrealBloomPass.BlurDirectionX = new Vector2(1, 0);
 UnrealBloomPass.BlurDirectionY = new Vector2(0, 1);
 //#endregion
-export { Scene as A, PointLight as C, RepeatWrapping as D, Raycaster as E, Texture as F, TextureLoader as I, Timer as L, SphereGeometry as M, Sprite as N, RingGeometry as O, SpriteMaterial as P, Vector2 as R, PerspectiveCamera as S, PointsMaterial as T, LinearFilter as _, OrbitControls as a, MeshBasicMaterial as b, BufferAttribute as c, ClampToEdgeWrapping as d, Color as f, LineSegments as g, LineBasicMaterial as h, EffectComposer as i, ShaderMaterial as j, SRGBColorSpace as k, BufferGeometry as l, Line as m, RenderPass as n, WebGLRenderer as o, Group as p, OutputPass as r, AmbientLight as s, UnrealBloomPass as t, CanvasTexture as u, MathUtils as v, Points as w, MeshStandardMaterial as x, Mesh as y, Vector3 as z };
+//#region node_modules/three/examples/jsm/lines/LineMaterial.js
+UniformsLib.line = {
+	worldUnits: { value: 1 },
+	linewidth: { value: 1 },
+	resolution: { value: new Vector2() },
+	dashOffset: { value: 0 },
+	dashScale: { value: 1 },
+	dashSize: { value: 1 },
+	gapSize: { value: 1 }
+};
+ShaderLib["line"] = {
+	uniforms: UniformsUtils.merge([
+		UniformsLib.common,
+		UniformsLib.fog,
+		UniformsLib.line
+	]),
+	vertexShader: `
+		#include <common>
+		#include <color_pars_vertex>
+		#include <fog_pars_vertex>
+		#include <logdepthbuf_pars_vertex>
+		#include <clipping_planes_pars_vertex>
+
+		uniform float linewidth;
+		uniform vec2 resolution;
+
+		attribute vec3 instanceStart;
+		attribute vec3 instanceEnd;
+
+		attribute vec3 instanceColorStart;
+		attribute vec3 instanceColorEnd;
+
+		#ifdef WORLD_UNITS
+
+			varying vec4 worldPos;
+			varying vec3 worldStart;
+			varying vec3 worldEnd;
+
+			#ifdef USE_DASH
+
+				varying vec2 vUv;
+
+			#endif
+
+		#else
+
+			varying vec2 vUv;
+
+		#endif
+
+		#ifdef USE_DASH
+
+			uniform float dashScale;
+			attribute float instanceDistanceStart;
+			attribute float instanceDistanceEnd;
+			varying float vLineDistance;
+
+		#endif
+
+		float trimSegmentAlpha( const in vec4 start, const in vec4 end ) {
+
+			// compute the interpolation factor needed to trim the segment so it terminates
+			// between the camera plane and the near plane
+
+			// conservative estimate of the near plane
+			float a = projectionMatrix[ 2 ][ 2 ]; // 3nd entry in 3th column
+			float b = projectionMatrix[ 3 ][ 2 ]; // 3nd entry in 4th column
+
+			// we need different nearEstimate formula for reversed and default depth buffer
+			// a is positive with a reversed depth buffer so it can be used for controlling the code flow
+			float nearEstimate = ( a > 0.0 ) ? ( - b / ( a + 1.0 ) ) : ( - 0.5 * b / a );
+
+			return ( nearEstimate - start.z ) / ( end.z - start.z );
+
+		}
+
+		void main() {
+
+			#ifdef USE_COLOR
+
+				vColor.xyz = ( position.y < 0.5 ) ? instanceColorStart : instanceColorEnd;
+
+			#endif
+
+			float aspect = resolution.x / resolution.y;
+
+			// camera space
+			vec4 start = modelViewMatrix * vec4( instanceStart, 1.0 );
+			vec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );
+
+			#ifdef USE_DASH
+
+				float lineDistanceStart = dashScale * instanceDistanceStart;
+				float lineDistanceEnd = dashScale * instanceDistanceEnd;
+
+			#endif
+
+			#ifdef WORLD_UNITS
+
+				worldStart = start.xyz;
+				worldEnd = end.xyz;
+
+			#else
+
+				vUv = uv;
+
+			#endif
+
+			// special case for perspective projection, and segments that terminate either in, or behind, the camera plane
+			// clearly the gpu firmware has a way of addressing this issue when projecting into ndc space
+			// but we need to perform ndc-space calculations in the shader, so we must address this issue directly
+			// perhaps there is a more elegant solution -- WestLangley
+
+			bool perspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 ); // 4th entry in the 3rd column
+
+			if ( perspective ) {
+
+				if ( start.z < 0.0 && end.z >= 0.0 ) {
+
+					float alpha = trimSegmentAlpha( start, end );
+					end.xyz = mix( start.xyz, end.xyz, alpha );
+
+					#ifdef USE_DASH
+
+						lineDistanceEnd = mix( lineDistanceStart, lineDistanceEnd, alpha );
+
+					#endif
+
+				} else if ( end.z < 0.0 && start.z >= 0.0 ) {
+
+					float alpha = trimSegmentAlpha( end, start );
+					start.xyz = mix( end.xyz, start.xyz, alpha );
+
+					#ifdef USE_DASH
+
+						lineDistanceStart = mix( lineDistanceEnd, lineDistanceStart, alpha );
+
+					#endif
+
+				}
+
+			}
+
+			#ifdef USE_DASH
+
+				vLineDistance = ( position.y < 0.5 ) ? lineDistanceStart : lineDistanceEnd;
+				vUv = uv;
+
+			#endif
+
+			// clip space
+			vec4 clipStart = projectionMatrix * start;
+			vec4 clipEnd = projectionMatrix * end;
+
+			// ndc space
+			vec3 ndcStart = clipStart.xyz / clipStart.w;
+			vec3 ndcEnd = clipEnd.xyz / clipEnd.w;
+
+			// direction
+			vec2 dir = ndcEnd.xy - ndcStart.xy;
+
+			// account for clip-space aspect ratio
+			dir.x *= aspect;
+			dir = normalize( dir );
+
+			#ifdef WORLD_UNITS
+
+				vec3 worldDir = normalize( end.xyz - start.xyz );
+				vec3 tmpFwd = normalize( mix( start.xyz, end.xyz, 0.5 ) );
+				vec3 worldUp = normalize( cross( worldDir, tmpFwd ) );
+				vec3 worldFwd = cross( worldDir, worldUp );
+				worldPos = position.y < 0.5 ? start: end;
+
+				// height offset
+				float hw = linewidth * 0.5;
+				worldPos.xyz += position.x < 0.0 ? hw * worldUp : - hw * worldUp;
+
+				// don't extend the line if we're rendering dashes because we
+				// won't be rendering the endcaps
+				#ifndef USE_DASH
+
+					// cap extension
+					worldPos.xyz += position.y < 0.5 ? - hw * worldDir : hw * worldDir;
+
+					// add width to the box
+					worldPos.xyz += worldFwd * hw;
+
+					// endcaps
+					if ( position.y > 1.0 || position.y < 0.0 ) {
+
+						worldPos.xyz -= worldFwd * 2.0 * hw;
+
+					}
+
+				#endif
+
+				// project the worldpos
+				vec4 clip = projectionMatrix * worldPos;
+
+				// shift the depth of the projected points so the line
+				// segments overlap neatly
+				vec3 clipPose = ( position.y < 0.5 ) ? ndcStart : ndcEnd;
+				clip.z = clipPose.z * clip.w;
+
+			#else
+
+				vec2 offset = vec2( dir.y, - dir.x );
+				// undo aspect ratio adjustment
+				dir.x /= aspect;
+				offset.x /= aspect;
+
+				// sign flip
+				if ( position.x < 0.0 ) offset *= - 1.0;
+
+				// endcaps
+				if ( position.y < 0.0 ) {
+
+					offset += - dir;
+
+				} else if ( position.y > 1.0 ) {
+
+					offset += dir;
+
+				}
+
+				// adjust for linewidth
+				offset *= linewidth;
+
+				// adjust for clip-space to screen-space conversion // maybe resolution should be based on viewport ...
+				offset /= resolution.y;
+
+				// select end
+				vec4 clip = ( position.y < 0.5 ) ? clipStart : clipEnd;
+
+				// back to clip space
+				offset *= clip.w;
+
+				clip.xy += offset;
+
+			#endif
+
+			gl_Position = clip;
+
+			vec4 mvPosition = ( position.y < 0.5 ) ? start : end; // this is an approximation
+
+			#include <logdepthbuf_vertex>
+			#include <clipping_planes_vertex>
+			#include <fog_vertex>
+
+		}
+		`,
+	fragmentShader: `
+		uniform vec3 diffuse;
+		uniform float opacity;
+		uniform float linewidth;
+
+		#ifdef USE_DASH
+
+			uniform float dashOffset;
+			uniform float dashSize;
+			uniform float gapSize;
+
+		#endif
+
+		varying float vLineDistance;
+
+		#ifdef WORLD_UNITS
+
+			varying vec4 worldPos;
+			varying vec3 worldStart;
+			varying vec3 worldEnd;
+
+			#ifdef USE_DASH
+
+				varying vec2 vUv;
+
+			#endif
+
+		#else
+
+			varying vec2 vUv;
+
+		#endif
+
+		#include <common>
+		#include <color_pars_fragment>
+		#include <fog_pars_fragment>
+		#include <logdepthbuf_pars_fragment>
+		#include <clipping_planes_pars_fragment>
+
+		vec2 closestLineToLine(vec3 p1, vec3 p2, vec3 p3, vec3 p4) {
+
+			float mua;
+			float mub;
+
+			vec3 p13 = p1 - p3;
+			vec3 p43 = p4 - p3;
+
+			vec3 p21 = p2 - p1;
+
+			float d1343 = dot( p13, p43 );
+			float d4321 = dot( p43, p21 );
+			float d1321 = dot( p13, p21 );
+			float d4343 = dot( p43, p43 );
+			float d2121 = dot( p21, p21 );
+
+			float denom = d2121 * d4343 - d4321 * d4321;
+
+			float numer = d1343 * d4321 - d1321 * d4343;
+
+			mua = numer / denom;
+			mua = clamp( mua, 0.0, 1.0 );
+			mub = ( d1343 + d4321 * ( mua ) ) / d4343;
+			mub = clamp( mub, 0.0, 1.0 );
+
+			return vec2( mua, mub );
+
+		}
+
+		void main() {
+
+			float alpha = opacity;
+			vec4 diffuseColor = vec4( diffuse, alpha );
+
+			#include <clipping_planes_fragment>
+
+			#ifdef USE_DASH
+
+				if ( vUv.y < - 1.0 || vUv.y > 1.0 ) discard; // discard endcaps
+
+				if ( mod( vLineDistance + dashOffset, dashSize + gapSize ) > dashSize ) discard; // todo - FIX
+
+			#endif
+
+			#ifdef WORLD_UNITS
+
+				// Find the closest points on the view ray and the line segment
+				vec3 rayEnd = normalize( worldPos.xyz ) * 1e5;
+				vec3 lineDir = worldEnd - worldStart;
+				vec2 params = closestLineToLine( worldStart, worldEnd, vec3( 0.0, 0.0, 0.0 ), rayEnd );
+
+				vec3 p1 = worldStart + lineDir * params.x;
+				vec3 p2 = rayEnd * params.y;
+				vec3 delta = p1 - p2;
+				float len = length( delta );
+				float norm = len / linewidth;
+
+				#ifndef USE_DASH
+
+					#ifdef USE_ALPHA_TO_COVERAGE
+
+						float dnorm = fwidth( norm );
+						alpha = 1.0 - smoothstep( 0.5 - dnorm, 0.5 + dnorm, norm );
+
+					#else
+
+						if ( norm > 0.5 ) {
+
+							discard;
+
+						}
+
+					#endif
+
+				#endif
+
+			#else
+
+				#ifdef USE_ALPHA_TO_COVERAGE
+
+					// artifacts appear on some hardware if a derivative is taken within a conditional
+					float a = vUv.x;
+					float b = ( vUv.y > 0.0 ) ? vUv.y - 1.0 : vUv.y + 1.0;
+					float len2 = a * a + b * b;
+					float dlen = fwidth( len2 );
+
+					if ( abs( vUv.y ) > 1.0 ) {
+
+						alpha = 1.0 - smoothstep( 1.0 - dlen, 1.0 + dlen, len2 );
+
+					}
+
+				#else
+
+					if ( abs( vUv.y ) > 1.0 ) {
+
+						float a = vUv.x;
+						float b = ( vUv.y > 0.0 ) ? vUv.y - 1.0 : vUv.y + 1.0;
+						float len2 = a * a + b * b;
+
+						if ( len2 > 1.0 ) discard;
+
+					}
+
+				#endif
+
+			#endif
+
+			#include <logdepthbuf_fragment>
+			#include <color_fragment>
+
+			gl_FragColor = vec4( diffuseColor.rgb, alpha );
+
+			#include <tonemapping_fragment>
+			#include <colorspace_fragment>
+			#include <fog_fragment>
+			#include <premultiplied_alpha_fragment>
+
+		}
+		`
+};
+/**
+* A material for drawing wireframe-style geometries.
+*
+* Unlike {@link LineBasicMaterial}, it supports arbitrary line widths and allows using world units
+* instead of screen space units. This material is used with {@link LineSegments2} and {@link Line2}.
+*
+* This module can only be used with {@link WebGLRenderer}. When using {@link WebGPURenderer},
+* use {@link Line2NodeMaterial}.
+*
+* @augments ShaderMaterial
+* @three_import import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+*/
+var LineMaterial = class extends ShaderMaterial {
+	/**
+	* Constructs a new line segments geometry.
+	*
+	* @param {Object} [parameters] - An object with one or more properties
+	* defining the material's appearance. Any property of the material
+	* (including any property from inherited materials) can be passed
+	* in here. Color values can be passed any type of value accepted
+	* by {@link Color#set}.
+	*/
+	constructor(parameters) {
+		super({
+			type: "LineMaterial",
+			uniforms: UniformsUtils.clone(ShaderLib["line"].uniforms),
+			vertexShader: ShaderLib["line"].vertexShader,
+			fragmentShader: ShaderLib["line"].fragmentShader,
+			clipping: true
+		});
+		/**
+		* This flag can be used for type testing.
+		*
+		* @type {boolean}
+		* @readonly
+		* @default true
+		*/
+		this.isLineMaterial = true;
+		this.setValues(parameters);
+	}
+	/**
+	* The material's color.
+	*
+	* @type {Color}
+	* @default (1,1,1)
+	*/
+	get color() {
+		return this.uniforms.diffuse.value;
+	}
+	set color(value) {
+		this.uniforms.diffuse.value = value;
+	}
+	/**
+	* Whether the material's sizes (width, dash gaps) are in world units.
+	*
+	* @type {boolean}
+	* @default false
+	*/
+	get worldUnits() {
+		return "WORLD_UNITS" in this.defines;
+	}
+	set worldUnits(value) {
+		if (value === true !== this.worldUnits) this.needsUpdate = true;
+		if (value === true) this.defines.WORLD_UNITS = "";
+		else delete this.defines.WORLD_UNITS;
+	}
+	/**
+	* Controls line thickness in CSS pixel units when `worldUnits` is `false` (default),
+	* or in world units when `worldUnits` is `true`.
+	*
+	* @type {number}
+	* @default 1
+	*/
+	get linewidth() {
+		return this.uniforms.linewidth.value;
+	}
+	set linewidth(value) {
+		if (!this.uniforms.linewidth) return;
+		this.uniforms.linewidth.value = value;
+	}
+	/**
+	* Whether the line is dashed, or solid.
+	*
+	* @type {boolean}
+	* @default false
+	*/
+	get dashed() {
+		return "USE_DASH" in this.defines;
+	}
+	set dashed(value) {
+		if (value === true !== this.dashed) this.needsUpdate = true;
+		if (value === true) this.defines.USE_DASH = "";
+		else delete this.defines.USE_DASH;
+	}
+	/**
+	* The scale of the dashes and gaps.
+	*
+	* @type {number}
+	* @default 1
+	*/
+	get dashScale() {
+		return this.uniforms.dashScale.value;
+	}
+	set dashScale(value) {
+		this.uniforms.dashScale.value = value;
+	}
+	/**
+	* The size of the dash.
+	*
+	* @type {number}
+	* @default 1
+	*/
+	get dashSize() {
+		return this.uniforms.dashSize.value;
+	}
+	set dashSize(value) {
+		this.uniforms.dashSize.value = value;
+	}
+	/**
+	* Where in the dash cycle the dash starts.
+	*
+	* @type {number}
+	* @default 0
+	*/
+	get dashOffset() {
+		return this.uniforms.dashOffset.value;
+	}
+	set dashOffset(value) {
+		this.uniforms.dashOffset.value = value;
+	}
+	/**
+	* The size of the gap.
+	*
+	* @type {number}
+	* @default 0
+	*/
+	get gapSize() {
+		return this.uniforms.gapSize.value;
+	}
+	set gapSize(value) {
+		this.uniforms.gapSize.value = value;
+	}
+	/**
+	* The opacity.
+	*
+	* @type {number}
+	* @default 1
+	*/
+	get opacity() {
+		return this.uniforms.opacity.value;
+	}
+	set opacity(value) {
+		if (!this.uniforms) return;
+		this.uniforms.opacity.value = value;
+	}
+	/**
+	* The size of the viewport, in screen pixels. This must be kept updated to make
+	* screen-space rendering accurate. The `LineSegments2.onBeforeRender` callback
+	* performs the update for visible objects.
+	*
+	* @type {Vector2}
+	*/
+	get resolution() {
+		return this.uniforms.resolution.value;
+	}
+	set resolution(value) {
+		this.uniforms.resolution.value.copy(value);
+	}
+	/**
+	* Whether to use alphaToCoverage or not. When enabled, this can improve the
+	* anti-aliasing of line edges when using MSAA.
+	*
+	* @type {boolean}
+	*/
+	get alphaToCoverage() {
+		return "USE_ALPHA_TO_COVERAGE" in this.defines;
+	}
+	set alphaToCoverage(value) {
+		if (!this.defines) return;
+		if (value === true !== this.alphaToCoverage) this.needsUpdate = true;
+		if (value === true) this.defines.USE_ALPHA_TO_COVERAGE = "";
+		else delete this.defines.USE_ALPHA_TO_COVERAGE;
+	}
+};
+//#endregion
+//#region node_modules/three/examples/jsm/lines/LineSegmentsGeometry.js
+var _box$1 = new Box3();
+var _vector = new Vector3();
+/**
+* A series of vertex pairs, forming line segments.
+*
+* This is used in {@link LineSegments2} to describe the shape.
+*
+* @augments InstancedBufferGeometry
+* @three_import import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+*/
+var LineSegmentsGeometry = class extends InstancedBufferGeometry {
+	/**
+	* Constructs a new line segments geometry.
+	*/
+	constructor() {
+		super();
+		/**
+		* This flag can be used for type testing.
+		*
+		* @type {boolean}
+		* @readonly
+		* @default true
+		*/
+		this.isLineSegmentsGeometry = true;
+		this.type = "LineSegmentsGeometry";
+		const positions = [
+			-1,
+			2,
+			0,
+			1,
+			2,
+			0,
+			-1,
+			1,
+			0,
+			1,
+			1,
+			0,
+			-1,
+			0,
+			0,
+			1,
+			0,
+			0,
+			-1,
+			-1,
+			0,
+			1,
+			-1,
+			0
+		];
+		const uvs = [
+			-1,
+			2,
+			1,
+			2,
+			-1,
+			1,
+			1,
+			1,
+			-1,
+			-1,
+			1,
+			-1,
+			-1,
+			-2,
+			1,
+			-2
+		];
+		this.setIndex([
+			0,
+			2,
+			1,
+			2,
+			3,
+			1,
+			2,
+			4,
+			3,
+			4,
+			5,
+			3,
+			4,
+			6,
+			5,
+			6,
+			7,
+			5
+		]);
+		this.setAttribute("position", new Float32BufferAttribute(positions, 3));
+		this.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+	}
+	/**
+	* Applies the given 4x4 transformation matrix to the geometry.
+	*
+	* @param {Matrix4} matrix - The matrix to apply.
+	* @return {LineSegmentsGeometry} A reference to this instance.
+	*/
+	applyMatrix4(matrix) {
+		const start = this.attributes.instanceStart;
+		const end = this.attributes.instanceEnd;
+		if (start !== void 0) {
+			start.applyMatrix4(matrix);
+			end.applyMatrix4(matrix);
+			start.needsUpdate = true;
+		}
+		if (this.boundingBox !== null) this.computeBoundingBox();
+		if (this.boundingSphere !== null) this.computeBoundingSphere();
+		return this;
+	}
+	/**
+	* Sets the given line positions for this geometry. The length must be a multiple of six since
+	* each line segment is defined by a start end vertex in the pattern `(xyz xyz)`.
+	*
+	* @param {Float32Array|Array<number>} array - The position data to set.
+	* @return {LineSegmentsGeometry} A reference to this geometry.
+	*/
+	setPositions(array) {
+		let lineSegments;
+		if (array instanceof Float32Array) lineSegments = array;
+		else if (Array.isArray(array)) lineSegments = new Float32Array(array);
+		const instanceBuffer = new InstancedInterleavedBuffer(lineSegments, 6, 1);
+		this.setAttribute("instanceStart", new InterleavedBufferAttribute(instanceBuffer, 3, 0));
+		this.setAttribute("instanceEnd", new InterleavedBufferAttribute(instanceBuffer, 3, 3));
+		this.instanceCount = this.attributes.instanceStart.count;
+		this.computeBoundingBox();
+		this.computeBoundingSphere();
+		return this;
+	}
+	/**
+	* Sets the given line colors for this geometry. The length must be a multiple of six since
+	* each line segment is defined by a start end color in the pattern `(rgb rgb)`.
+	*
+	* @param {Float32Array|Array<number>} array - The position data to set.
+	* @return {LineSegmentsGeometry} A reference to this geometry.
+	*/
+	setColors(array) {
+		let colors;
+		if (array instanceof Float32Array) colors = array;
+		else if (Array.isArray(array)) colors = new Float32Array(array);
+		const instanceColorBuffer = new InstancedInterleavedBuffer(colors, 6, 1);
+		this.setAttribute("instanceColorStart", new InterleavedBufferAttribute(instanceColorBuffer, 3, 0));
+		this.setAttribute("instanceColorEnd", new InterleavedBufferAttribute(instanceColorBuffer, 3, 3));
+		return this;
+	}
+	/**
+	* Setups this line segments geometry from the given wireframe geometry.
+	*
+	* @param {WireframeGeometry} geometry - The geometry that should be used as a data source for this geometry.
+	* @return {LineSegmentsGeometry} A reference to this geometry.
+	*/
+	fromWireframeGeometry(geometry) {
+		this.setPositions(geometry.attributes.position.array);
+		return this;
+	}
+	/**
+	* Setups this line segments geometry from the given edges geometry.
+	*
+	* @param {EdgesGeometry} geometry - The geometry that should be used as a data source for this geometry.
+	* @return {LineSegmentsGeometry} A reference to this geometry.
+	*/
+	fromEdgesGeometry(geometry) {
+		this.setPositions(geometry.attributes.position.array);
+		return this;
+	}
+	/**
+	* Setups this line segments geometry from the given mesh.
+	*
+	* @param {Mesh} mesh - The mesh geometry that should be used as a data source for this geometry.
+	* @return {LineSegmentsGeometry} A reference to this geometry.
+	*/
+	fromMesh(mesh) {
+		this.fromWireframeGeometry(new WireframeGeometry(mesh.geometry));
+		return this;
+	}
+	/**
+	* Setups this line segments geometry from the given line segments.
+	*
+	* @param {LineSegments} lineSegments - The line segments that should be used as a data source for this geometry.
+	* Assumes the source geometry is not using indices.
+	* @return {LineSegmentsGeometry} A reference to this geometry.
+	*/
+	fromLineSegments(lineSegments) {
+		const geometry = lineSegments.geometry;
+		this.setPositions(geometry.attributes.position.array);
+		return this;
+	}
+	computeBoundingBox() {
+		if (this.boundingBox === null) this.boundingBox = new Box3();
+		const start = this.attributes.instanceStart;
+		const end = this.attributes.instanceEnd;
+		if (start !== void 0 && end !== void 0) {
+			this.boundingBox.setFromBufferAttribute(start);
+			_box$1.setFromBufferAttribute(end);
+			this.boundingBox.union(_box$1);
+		}
+	}
+	computeBoundingSphere() {
+		if (this.boundingSphere === null) this.boundingSphere = new Sphere();
+		if (this.boundingBox === null) this.computeBoundingBox();
+		const start = this.attributes.instanceStart;
+		const end = this.attributes.instanceEnd;
+		if (start !== void 0 && end !== void 0) {
+			const center = this.boundingSphere.center;
+			this.boundingBox.getCenter(center);
+			let maxRadiusSq = 0;
+			for (let i = 0, il = start.count; i < il; i++) {
+				_vector.fromBufferAttribute(start, i);
+				maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(_vector));
+				_vector.fromBufferAttribute(end, i);
+				maxRadiusSq = Math.max(maxRadiusSq, center.distanceToSquared(_vector));
+			}
+			this.boundingSphere.radius = Math.sqrt(maxRadiusSq);
+			if (isNaN(this.boundingSphere.radius)) console.error("THREE.LineSegmentsGeometry.computeBoundingSphere(): Computed radius is NaN. The instanced position data is likely to have NaN values.", this);
+		}
+	}
+	toJSON() {}
+};
+//#endregion
+//#region node_modules/three/examples/jsm/lines/LineSegments2.js
+var _viewport = new Vector4();
+var _start = new Vector3();
+var _end = new Vector3();
+var _start4 = new Vector4();
+var _end4 = new Vector4();
+var _ssOrigin = new Vector4();
+var _ssOrigin3 = new Vector3();
+var _mvMatrix = new Matrix4();
+var _line = new Line3();
+var _closestPoint = new Vector3();
+var _box = new Box3();
+var _sphere = new Sphere();
+var _clipToWorldVector = new Vector4();
+var _ray;
+var _lineWidth;
+function getWorldSpaceHalfWidth(camera, distance, resolution) {
+	_clipToWorldVector.set(0, 0, -distance, 1).applyMatrix4(camera.projectionMatrix);
+	_clipToWorldVector.multiplyScalar(1 / _clipToWorldVector.w);
+	_clipToWorldVector.x = _lineWidth / resolution.width;
+	_clipToWorldVector.y = _lineWidth / resolution.height;
+	_clipToWorldVector.applyMatrix4(camera.projectionMatrixInverse);
+	_clipToWorldVector.multiplyScalar(1 / _clipToWorldVector.w);
+	return Math.abs(Math.max(_clipToWorldVector.x, _clipToWorldVector.y));
+}
+function raycastWorldUnits(lineSegments, intersects) {
+	const matrixWorld = lineSegments.matrixWorld;
+	const geometry = lineSegments.geometry;
+	const instanceStart = geometry.attributes.instanceStart;
+	const instanceEnd = geometry.attributes.instanceEnd;
+	const segmentCount = Math.min(geometry.instanceCount, instanceStart.count);
+	for (let i = 0, l = segmentCount; i < l; i++) {
+		_line.start.fromBufferAttribute(instanceStart, i);
+		_line.end.fromBufferAttribute(instanceEnd, i);
+		_line.applyMatrix4(matrixWorld);
+		const pointOnLine = new Vector3();
+		const point = new Vector3();
+		_ray.distanceSqToSegment(_line.start, _line.end, point, pointOnLine);
+		if (point.distanceTo(pointOnLine) < _lineWidth * .5) intersects.push({
+			point,
+			pointOnLine,
+			distance: _ray.origin.distanceTo(point),
+			object: lineSegments,
+			face: null,
+			faceIndex: i,
+			uv: null,
+			uv1: null
+		});
+	}
+}
+function raycastScreenSpace(lineSegments, camera, intersects) {
+	const projectionMatrix = camera.projectionMatrix;
+	const resolution = lineSegments.material.resolution;
+	const matrixWorld = lineSegments.matrixWorld;
+	const geometry = lineSegments.geometry;
+	const instanceStart = geometry.attributes.instanceStart;
+	const instanceEnd = geometry.attributes.instanceEnd;
+	const segmentCount = Math.min(geometry.instanceCount, instanceStart.count);
+	const near = -camera.near;
+	_ray.at(1, _ssOrigin);
+	_ssOrigin.w = 1;
+	_ssOrigin.applyMatrix4(camera.matrixWorldInverse);
+	_ssOrigin.applyMatrix4(projectionMatrix);
+	_ssOrigin.multiplyScalar(1 / _ssOrigin.w);
+	_ssOrigin.x *= resolution.x / 2;
+	_ssOrigin.y *= resolution.y / 2;
+	_ssOrigin.z = 0;
+	_ssOrigin3.copy(_ssOrigin);
+	_mvMatrix.multiplyMatrices(camera.matrixWorldInverse, matrixWorld);
+	for (let i = 0, l = segmentCount; i < l; i++) {
+		_start4.fromBufferAttribute(instanceStart, i);
+		_end4.fromBufferAttribute(instanceEnd, i);
+		_start4.w = 1;
+		_end4.w = 1;
+		_start4.applyMatrix4(_mvMatrix);
+		_end4.applyMatrix4(_mvMatrix);
+		if (_start4.z > near && _end4.z > near) continue;
+		if (_start4.z > near) {
+			const deltaDist = _start4.z - _end4.z;
+			const t = (_start4.z - near) / deltaDist;
+			_start4.lerp(_end4, t);
+		} else if (_end4.z > near) {
+			const deltaDist = _end4.z - _start4.z;
+			const t = (_end4.z - near) / deltaDist;
+			_end4.lerp(_start4, t);
+		}
+		_start4.applyMatrix4(projectionMatrix);
+		_end4.applyMatrix4(projectionMatrix);
+		_start4.multiplyScalar(1 / _start4.w);
+		_end4.multiplyScalar(1 / _end4.w);
+		_start4.x *= resolution.x / 2;
+		_start4.y *= resolution.y / 2;
+		_end4.x *= resolution.x / 2;
+		_end4.y *= resolution.y / 2;
+		_line.start.copy(_start4);
+		_line.start.z = 0;
+		_line.end.copy(_end4);
+		_line.end.z = 0;
+		const param = _line.closestPointToPointParameter(_ssOrigin3, true);
+		_line.at(param, _closestPoint);
+		const zPos = MathUtils.lerp(_start4.z, _end4.z, param);
+		const isInClipSpace = zPos >= -1 && zPos <= 1;
+		const isInside = _ssOrigin3.distanceTo(_closestPoint) < _lineWidth * .5;
+		if (isInClipSpace && isInside) {
+			_line.start.fromBufferAttribute(instanceStart, i);
+			_line.end.fromBufferAttribute(instanceEnd, i);
+			_line.start.applyMatrix4(matrixWorld);
+			_line.end.applyMatrix4(matrixWorld);
+			const pointOnLine = new Vector3();
+			const point = new Vector3();
+			_ray.distanceSqToSegment(_line.start, _line.end, point, pointOnLine);
+			intersects.push({
+				point,
+				pointOnLine,
+				distance: _ray.origin.distanceTo(point),
+				object: lineSegments,
+				face: null,
+				faceIndex: i,
+				uv: null,
+				uv1: null
+			});
+		}
+	}
+}
+/**
+* A series of lines drawn between pairs of vertices.
+*
+* This adds functionality beyond {@link LineSegments}, like arbitrary line width and changing width
+* to be in world units. {@link Line2} extends this object, forming a polyline instead of individual
+* segments.
+*
+* This module can only be used with {@link WebGLRenderer}. When using {@link WebGPURenderer},
+* import the class from `lines/webgpu/LineSegments2.js`.
+*
+*  ```js
+* const geometry = new LineSegmentsGeometry();
+* geometry.setPositions( positions );
+* geometry.setColors( colors );
+*
+* const material = new LineMaterial( { linewidth: 5, vertexColors: true } };
+*
+* const lineSegments = new LineSegments2( geometry, material );
+* scene.add( lineSegments );
+* ```
+*
+* @augments Mesh
+* @three_import import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+*/
+var LineSegments2 = class extends Mesh {
+	/**
+	* Constructs a new wide line.
+	*
+	* @param {LineSegmentsGeometry} [geometry] - The line geometry.
+	* @param {LineMaterial} [material] - The line material.
+	*/
+	constructor(geometry = new LineSegmentsGeometry(), material = new LineMaterial({ color: Math.random() * 16777215 })) {
+		super(geometry, material);
+		/**
+		* This flag can be used for type testing.
+		*
+		* @type {boolean}
+		* @readonly
+		* @default true
+		*/
+		this.isLineSegments2 = true;
+		this.type = "LineSegments2";
+	}
+	/**
+	* Computes an array of distance values which are necessary for rendering dashed lines.
+	* For each vertex in the geometry, the method calculates the cumulative length from the
+	* current point to the very beginning of the line.
+	*
+	* @return {LineSegments2} A reference to this instance.
+	*/
+	computeLineDistances() {
+		const geometry = this.geometry;
+		const instanceStart = geometry.attributes.instanceStart;
+		const instanceEnd = geometry.attributes.instanceEnd;
+		const lineDistances = new Float32Array(2 * instanceStart.count);
+		for (let i = 0, j = 0, l = instanceStart.count; i < l; i++, j += 2) {
+			_start.fromBufferAttribute(instanceStart, i);
+			_end.fromBufferAttribute(instanceEnd, i);
+			lineDistances[j] = j === 0 ? 0 : lineDistances[j - 1];
+			lineDistances[j + 1] = lineDistances[j] + _start.distanceTo(_end);
+		}
+		const instanceDistanceBuffer = new InstancedInterleavedBuffer(lineDistances, 2, 1);
+		geometry.setAttribute("instanceDistanceStart", new InterleavedBufferAttribute(instanceDistanceBuffer, 1, 0));
+		geometry.setAttribute("instanceDistanceEnd", new InterleavedBufferAttribute(instanceDistanceBuffer, 1, 1));
+		return this;
+	}
+	/**
+	* Computes intersection points between a casted ray and this instance.
+	*
+	* @param {Raycaster} raycaster - The raycaster.
+	* @param {Array<Object>} intersects - The target array that holds the intersection points.
+	*/
+	raycast(raycaster, intersects) {
+		const worldUnits = this.material.worldUnits;
+		const camera = raycaster.camera;
+		if (camera === null && !worldUnits) console.error("LineSegments2: \"Raycaster.camera\" needs to be set in order to raycast against LineSegments2 while worldUnits is set to false.");
+		if (worldUnits === false && (this.material.resolution.x === 0 || this.material.resolution.y === 0)) return;
+		const threshold = raycaster.params.Line2 !== void 0 ? raycaster.params.Line2.threshold || 0 : 0;
+		_ray = raycaster.ray;
+		const matrixWorld = this.matrixWorld;
+		const geometry = this.geometry;
+		const material = this.material;
+		_lineWidth = material.linewidth + threshold;
+		if (geometry.boundingSphere === null) geometry.computeBoundingSphere();
+		_sphere.copy(geometry.boundingSphere).applyMatrix4(matrixWorld);
+		let sphereMargin;
+		if (worldUnits) sphereMargin = _lineWidth * .5;
+		else sphereMargin = getWorldSpaceHalfWidth(camera, Math.max(camera.near, _sphere.distanceToPoint(_ray.origin)), material.resolution);
+		_sphere.radius += sphereMargin;
+		if (_ray.intersectsSphere(_sphere) === false) return;
+		if (geometry.boundingBox === null) geometry.computeBoundingBox();
+		_box.copy(geometry.boundingBox).applyMatrix4(matrixWorld);
+		let boxMargin;
+		if (worldUnits) boxMargin = _lineWidth * .5;
+		else boxMargin = getWorldSpaceHalfWidth(camera, Math.max(camera.near, _box.distanceToPoint(_ray.origin)), material.resolution);
+		_box.expandByScalar(boxMargin);
+		if (_ray.intersectsBox(_box) === false) return;
+		if (worldUnits) raycastWorldUnits(this, intersects);
+		else raycastScreenSpace(this, camera, intersects);
+	}
+	onBeforeRender(renderer) {
+		const uniforms = this.material.uniforms;
+		if (uniforms && uniforms.resolution) {
+			renderer.getViewport(_viewport);
+			this.material.uniforms.resolution.value.set(_viewport.z, _viewport.w);
+		}
+	}
+};
+//#endregion
+//#region node_modules/three/examples/jsm/lines/LineGeometry.js
+/**
+* A chain of vertices, forming a polyline.
+*
+* This is used in {@link Line2} to describe the shape.
+*
+* ```js
+* const points = [
+* 	new THREE.Vector3( - 10, 0, 0 ),
+* 	new THREE.Vector3( 0, 5, 0 ),
+* 	new THREE.Vector3( 10, 0, 0 ),
+* ];
+*
+* const geometry = new LineGeometry();
+* geometry.setFromPoints( points );
+* ```
+*
+* @augments LineSegmentsGeometry
+* @three_import import { LineLineGeometry2 } from 'three/addons/lines/LineGeometry.js';
+*/
+var LineGeometry = class extends LineSegmentsGeometry {
+	/**
+	* Constructs a new line geometry.
+	*/
+	constructor() {
+		super();
+		/**
+		* This flag can be used for type testing.
+		*
+		* @type {boolean}
+		* @readonly
+		* @default true
+		*/
+		this.isLineGeometry = true;
+		this.type = "LineGeometry";
+	}
+	/**
+	* Sets the given line positions for this geometry.
+	*
+	* @param {Float32Array|Array<number>} array - The position data to set.
+	* @return {LineGeometry} A reference to this geometry.
+	*/
+	setPositions(array) {
+		const length = array.length - 3;
+		const points = new Float32Array(2 * length);
+		for (let i = 0; i < length; i += 3) {
+			points[2 * i] = array[i];
+			points[2 * i + 1] = array[i + 1];
+			points[2 * i + 2] = array[i + 2];
+			points[2 * i + 3] = array[i + 3];
+			points[2 * i + 4] = array[i + 4];
+			points[2 * i + 5] = array[i + 5];
+		}
+		super.setPositions(points);
+		return this;
+	}
+	/**
+	* Sets the given line colors for this geometry.
+	*
+	* @param {Float32Array|Array<number>} array - The position data to set.
+	* @return {LineGeometry} A reference to this geometry.
+	*/
+	setColors(array) {
+		const length = array.length - 3;
+		const colors = new Float32Array(2 * length);
+		for (let i = 0; i < length; i += 3) {
+			colors[2 * i] = array[i];
+			colors[2 * i + 1] = array[i + 1];
+			colors[2 * i + 2] = array[i + 2];
+			colors[2 * i + 3] = array[i + 3];
+			colors[2 * i + 4] = array[i + 4];
+			colors[2 * i + 5] = array[i + 5];
+		}
+		super.setColors(colors);
+		return this;
+	}
+	/**
+	* Setups this line segments geometry from the given sequence of points.
+	*
+	* @param {Array<Vector3|Vector2>} points - An array of points in 2D or 3D space.
+	* @return {LineGeometry} A reference to this geometry.
+	*/
+	setFromPoints(points) {
+		const length = points.length - 1;
+		const positions = new Float32Array(6 * length);
+		for (let i = 0; i < length; i++) {
+			positions[6 * i] = points[i].x;
+			positions[6 * i + 1] = points[i].y;
+			positions[6 * i + 2] = points[i].z || 0;
+			positions[6 * i + 3] = points[i + 1].x;
+			positions[6 * i + 4] = points[i + 1].y;
+			positions[6 * i + 5] = points[i + 1].z || 0;
+		}
+		super.setPositions(positions);
+		return this;
+	}
+	/**
+	* Setups this line segments geometry from the given line.
+	*
+	* @param {Line} line - The line that should be used as a data source for this geometry.
+	* @return {LineGeometry} A reference to this geometry.
+	*/
+	fromLine(line) {
+		const geometry = line.geometry;
+		this.setPositions(geometry.attributes.position.array);
+		return this;
+	}
+};
+//#endregion
+//#region node_modules/three/examples/jsm/lines/Line2.js
+/**
+* A polyline drawn between vertices.
+*
+* This adds functionality beyond {@link Line}, like arbitrary line width and changing width to
+* be in world units.It extends {@link LineSegments2}, simplifying constructing segments from a
+* chain of points.
+*
+* This module can only be used with {@link WebGLRenderer}. When using {@link WebGPURenderer},
+* import the class from `lines/webgpu/Line2.js`.
+*
+* ```js
+* const geometry = new LineGeometry();
+* geometry.setPositions( positions );
+* geometry.setColors( colors );
+*
+* const material = new LineMaterial( { linewidth: 5, vertexColors: true } };
+*
+* const line = new Line2( geometry, material );
+* scene.add( line );
+* ```
+*
+* @augments LineSegments2
+* @three_import import { Line2 } from 'three/addons/lines/Line2.js';
+*/
+var Line2 = class extends LineSegments2 {
+	/**
+	* Constructs a new wide line.
+	*
+	* @param {LineGeometry} [geometry] - The line geometry.
+	* @param {LineMaterial} [material] - The line material.
+	*/
+	constructor(geometry = new LineGeometry(), material = new LineMaterial({ color: Math.random() * 16777215 })) {
+		super(geometry, material);
+		/**
+		* This flag can be used for type testing.
+		*
+		* @type {boolean}
+		* @readonly
+		* @default true
+		*/
+		this.isLine2 = true;
+		this.type = "Line2";
+	}
+};
+//#endregion
+export { RepeatWrapping as A, Timer as B, MeshBasicMaterial as C, Points as D, PointLight as E, SphereGeometry as F, Vector3 as H, Sprite as I, SpriteMaterial as L, SRGBColorSpace as M, Scene as N, PointsMaterial as O, ShaderMaterial as P, Texture as R, Mesh as S, PerspectiveCamera as T, Vector2 as V, ClampToEdgeWrapping as _, LineMaterial as a, LinearFilter as b, OutputPass as c, OrbitControls as d, WebGLRenderer as f, CanvasTexture as g, BufferGeometry as h, LineSegmentsGeometry as i, RingGeometry as j, Raycaster as k, FXAAPass as l, BufferAttribute as m, LineGeometry as n, UnrealBloomPass as o, AmbientLight as p, LineSegments2 as r, RenderPass as s, Line2 as t, EffectComposer as u, Color as v, MeshStandardMaterial as w, MathUtils as x, Group as y, TextureLoader as z };

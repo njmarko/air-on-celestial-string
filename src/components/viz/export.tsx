@@ -1,7 +1,7 @@
 import { Square } from "lucide-react";
 import { formatNote, useT } from "@/i18n/use-i18n";
-import { exportSize, VIDEO_ASPECTS, VIDEO_QUALITIES } from "@/lib/celestial/recorder";
-import type { OrbitDir, VideoAspect, VideoQuality } from "@/lib/celestial/types";
+import { exportSize, fpsValue, VIDEO_ASPECTS, VIDEO_FPS, VIDEO_QUALITIES } from "@/lib/celestial/recorder";
+import type { OrbitDir, VideoAspect, VideoFps, VideoQuality } from "@/lib/celestial/types";
 import { formatTime } from "@/lib/utils";
 import { act } from "@/lib/viz-actions";
 import { useVizStore } from "@/store/viz-store";
@@ -18,15 +18,24 @@ const QUALITY_HINT: Record<VideoQuality, string> = {
   "720": "record.q720",
   "1080": "record.q1080",
   "1440": "record.q1440",
+  "2160": "record.q2160",
+};
+
+const FPS_HINT: Record<VideoFps, string> = {
+  "24": "record.fps24",
+  "30": "record.fps30",
+  "60": "record.fps60",
 };
 
 export function ExportFields({ onStart }: { onStart?: () => void }) {
   const t = useT();
   const aspect = useVizStore((s) => s.videoAspect);
   const quality = useVizStore((s) => s.videoQuality);
+  const videoFps = useVizStore((s) => s.videoFps);
   const recording = useVizStore((s) => s.recording);
   const recordNote = useVizStore((s) => s.recordNote);
   const size = exportSize(aspect, quality);
+  const fps = fpsValue(videoFps);
   const noteText = formatNote(t, recordNote);
 
   return (
@@ -51,8 +60,18 @@ export function ExportFields({ onStart }: { onStart?: () => void }) {
         }))}
         onChange={(value) => act((engine) => engine.setVideoQuality(value))}
       />
+      <Segmented<VideoFps>
+        label={t("record.fps")}
+        value={videoFps}
+        options={VIDEO_FPS.map((item) => ({
+          id: item.id,
+          label: item.label,
+          hint: t(FPS_HINT[item.id]),
+        }))}
+        onChange={(value) => act((engine) => engine.setVideoFps(value))}
+      />
       <p className="px-1 text-xs tabular-nums text-faint">
-        {t("record.size", { width: size.width, height: size.height })}
+        {t("record.size", { width: size.width, height: size.height, fps })}
       </p>
       <p className="px-1 text-xs leading-relaxed text-faint">{t("record.blurb")}</p>
       {noteText && !recording ? (
@@ -82,9 +101,11 @@ export function RecPill() {
   const autoOrbit = useVizStore((s) => s.autoOrbit);
   const aspect = useVizStore((s) => s.videoAspect);
   const quality = useVizStore((s) => s.videoQuality);
+  const videoFps = useVizStore((s) => s.videoFps);
 
   if (!recording) return null;
   const size = exportSize(aspect, quality);
+  const fps = fpsValue(videoFps);
 
   return (
     <div className="overlay-safe pointer-events-none absolute inset-0 z-50">
@@ -97,7 +118,7 @@ export function RecPill() {
           <span className="mr-2 font-sans font-medium tracking-wider text-danger">REC</span>
           {formatTime(elapsed)}
           <span className="ml-2 text-faint">
-            {format || "MP4"} · {size.width}×{size.height}
+            {format || "MP4"} · {size.width}×{size.height} · {fps}
           </span>
         </p>
         <button

@@ -137,6 +137,11 @@ export const en = {
   "mix.trail": "Trail",
   "mix.trailHint": "How long each strand lingers before fading.",
   "mix.trailDisplay": "{n}s",
+  "mix.stringWidth": "String thickness",
+  "mix.stringWidthHint": "How thick the woven strings between worlds draw.",
+  "mix.pathWidth": "Path thickness",
+  "mix.pathWidthHint": "How thick the orbit rings draw.",
+  "mix.widthDisplay": "{n} px",
   "mix.paths": "Paths",
   "mix.kepler": "Kepler",
   "mix.keplerHint": "Elliptical orbits, as in the real solar system.",
@@ -161,6 +166,9 @@ export const en = {
   "mix.ambientHint": "Fill light on the night side of each world. 1 is the default.",
   "mix.bloom": "Bloom",
   "mix.bloomHint": "Glow around the sun and bright strings.",
+  "mix.aa": "Antialiasing",
+  "mix.aaHint":
+    "Smooth the edges of worlds and strings. Turn off for a sharper pixel look or a little extra speed.",
   "mix.rings": "Saturn rings",
   "mix.ringsHint":
     "How bright Saturn's rings read against the sky. Raise it if the ice bands look faint.",
@@ -236,6 +244,7 @@ export const en = {
   "record.videoTitle": "Export video",
   "record.frame": "Frame",
   "record.resolution": "Resolution",
+  "record.fps": "Frame rate",
   "record.blurb":
     "Only the sky is saved — menus and the cursor stay out of the file. Drag to orbit while it records. MP4 when this browser can encode it.",
   "record.start": "Start recording",
@@ -266,7 +275,11 @@ export const en = {
   "record.q720": "720 along the short edge. Lighter file.",
   "record.q1080": "1080 along the short edge. Default.",
   "record.q1440": "1440 along the short edge. Heavier file.",
-  "record.size": "{width} × {height}",
+  "record.q2160": "4K UHD — 2160 along the short edge. Needs a strong GPU.",
+  "record.fps24": "24 frames per second. Cinematic cadence.",
+  "record.fps30": "30 frames per second. Default.",
+  "record.fps60": "60 frames per second. Smoother motion, heavier file.",
+  "record.size": "{width} × {height} · {fps} fps",
 
   "player.play": "Play",
   "player.pause": "Pause",

@@ -1,23 +1,10 @@
 import * as THREE from "three";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+import { LineSegments2 } from "three/addons/lines/LineSegments2.js";
+import { LineSegmentsGeometry } from "three/addons/lines/LineSegmentsGeometry.js";
 import type { CelestialBody, RhythmBand } from "./types";
 
 type Segment = { p1: THREE.Vector3; p2: THREE.Vector3; time: number };
-
-const VERT_SRC = /* glsl */ `
-  attribute vec4 aColor;
-  varying vec4 vColor;
-  void main() {
-    vColor = aColor;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-const FRAG_SRC = /* glsl */ `
-  varying vec4 vColor;
-  void main() {
-    gl_FragColor = vColor;
-  }
-`;
 
 export class Connection {
   id = "";
@@ -37,36 +24,39 @@ export class Connection {
 
   private scene: THREE.Scene;
   private segments: Segment[] = [];
-  private geometry: THREE.BufferGeometry;
-  private material: THREE.ShaderMaterial;
-  line: THREE.LineSegments;
-  private pos = new Float32Array(6);
-  private col = new Float32Array(8);
+  private geometry: LineSegmentsGeometry;
+  private material: LineMaterial;
+  line: LineSegments2;
+  private pos: Float32Array;
+  private col: Float32Array;
   private readonly _p1 = new THREE.Vector3();
   private readonly _p2 = new THREE.Vector3();
   private readonly maxSegments = 4000;
 
-  constructor(scene: THREE.Scene, body1: CelestialBody, body2: CelestialBody, color = 0x88ffaa) {
+  constructor(scene: THREE.Scene, body1: CelestialBody, body2: CelestialBody, color = 0x88ffaa, width = 2) {
     this.scene = scene;
     this.body1 = body1;
     this.body2 = body2;
     this.color = new THREE.Color(color);
 
-    this.geometry = new THREE.BufferGeometry();
-    this.geometry.setAttribute("position", new THREE.BufferAttribute(this.pos, 3));
-    this.geometry.setAttribute("aColor", new THREE.BufferAttribute(this.col, 4));
-    this.geometry.setDrawRange(0, 0);
+    this.pos = new Float32Array(this.maxSegments * 6);
+    this.col = new Float32Array(this.maxSegments * 6);
+    this.geometry = new LineSegmentsGeometry();
+    this.geometry.setPositions(this.pos);
+    this.geometry.setColors(this.col);
+    this.geometry.instanceCount = 0;
 
-    this.material = new THREE.ShaderMaterial({
-      vertexShader: VERT_SRC,
-      fragmentShader: FRAG_SRC,
+    this.material = new LineMaterial({
+      color: 0xffffff,
+      linewidth: width,
+      vertexColors: true,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      depthTest: true,
+      toneMapped: false,
     });
 
-    this.line = new THREE.LineSegments(this.geometry, this.material);
+    this.line = new LineSegments2(this.geometry, this.material);
     this.line.frustumCulled = false;
     scene.add(this.line);
   }
@@ -89,18 +79,10 @@ export class Connection {
     }
 
     const count = this.segments.length;
-    const need = Math.max(1, count) * 6;
-    if (this.pos.length < need) {
-      const cap = Math.max(need, this.pos.length * 2);
-      this.pos = new Float32Array(cap);
-      this.col = new Float32Array((cap / 3) * 4);
-      this.geometry.setAttribute("position", new THREE.BufferAttribute(this.pos, 3));
-      this.geometry.setAttribute("aColor", new THREE.BufferAttribute(this.col, 4));
-    }
-
+    const col = this.color;
+    let drawn = 0;
     let v = 0;
     let c = 0;
-    const col = this.color;
     for (let i = 0; i < count; i++) {
       const seg = this.segments[i]!;
       const age = (now - seg.time) / 1000;
@@ -114,22 +96,24 @@ export class Connection {
       this.pos[v++] = seg.p2.x;
       this.pos[v++] = seg.p2.y;
       this.pos[v++] = seg.p2.z;
-      this.col[c++] = col.r;
-      this.col[c++] = col.g;
-      this.col[c++] = col.b;
-      this.col[c++] = alpha;
-      this.col[c++] = col.r;
-      this.col[c++] = col.g;
-      this.col[c++] = col.b;
-      this.col[c++] = alpha;
+      const r = col.r * alpha;
+      const g = col.g * alpha;
+      const b = col.b * alpha;
+      this.col[c++] = r;
+      this.col[c++] = g;
+      this.col[c++] = b;
+      this.col[c++] = r;
+      this.col[c++] = g;
+      this.col[c++] = b;
+      drawn++;
     }
 
-    const posAttr = this.geometry.getAttribute("position") as THREE.BufferAttribute;
-    const colAttr = this.geometry.getAttribute("aColor") as THREE.BufferAttribute;
-    posAttr.needsUpdate = true;
-    colAttr.needsUpdate = true;
-    this.geometry.setDrawRange(0, (v / 3) | 0);
-    this.geometry.computeBoundingSphere();
+    const start = this.geometry.getAttribute("instanceStart");
+    const colorStart = this.geometry.getAttribute("instanceColorStart");
+    if (start) start.needsUpdate = true;
+    if (colorStart) colorStart.needsUpdate = true;
+    this.geometry.instanceCount = drawn;
+    this.line.visible = this.visible && drawn > 0;
   }
 
   setColor(newColor: THREE.ColorRepresentation): void {
@@ -140,9 +124,13 @@ export class Connection {
     this.baseAlpha = THREE.MathUtils.clamp(alpha, 0, 1);
   }
 
+  setWidth(width: number): void {
+    this.material.linewidth = Math.max(0.25, width);
+  }
+
   setVisible(isVisible: boolean): void {
     this.visible = isVisible;
-    this.line.visible = isVisible;
+    this.line.visible = isVisible && this.segments.length > 0;
   }
 
   segmentCount(): number {
@@ -152,7 +140,8 @@ export class Connection {
   clear(): void {
     this.segments = [];
     this.weaveAcc = 0;
-    this.geometry.setDrawRange(0, 0);
+    this.geometry.instanceCount = 0;
+    this.line.visible = false;
   }
 
   dispose(): void {

@@ -1,4 +1,4 @@
-import type { VideoAspect, VideoQuality } from "./recorder";
+import type { VideoAspect, VideoFps, VideoQuality } from "./recorder";
 import type { LocNote } from "./loc-note";
 import type * as THREE from "three";
 
@@ -8,7 +8,7 @@ export type BackgroundType = "none" | "stars" | "milkyway";
 export type RhythmMode = "simple" | "advanced";
 export type MixStatus = "idle" | "analyzing" | "live" | "failed";
 export type OrbitDir = "ccw" | "cw";
-export type { VideoAspect, VideoQuality };
+export type { VideoAspect, VideoFps, VideoQuality };
 
 export type PlanetDef = {
   name: string;
@@ -63,11 +63,14 @@ export type VizSnapshot = {
   linesPerSec: number;
   maxWeave: number;
   trailDuration: number;
+  pathWidth: number;
+  stringWidth: number;
   orbitMode: OrbitMode;
   background: BackgroundType;
   parallax: boolean;
   ambient: number;
   bloom: number;
+  antialias: boolean;
   ringBrightness: number;
   selectedCount: number;
   canCreate: boolean;
@@ -82,6 +85,7 @@ export type VizSnapshot = {
   recordFormat: string;
   videoAspect: VideoAspect;
   videoQuality: VideoQuality;
+  videoFps: VideoFps;
   bodies: BodyRow[];
   connections: ConnRow[];
   audio: {

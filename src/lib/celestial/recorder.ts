@@ -1,7 +1,8 @@
 import { EMPTY_NOTE, note, type LocNote } from "./loc-note";
 
 export type VideoAspect = "16:9" | "9:16" | "1:1" | "4:3";
-export type VideoQuality = "720" | "1080" | "1440";
+export type VideoQuality = "720" | "1080" | "1440" | "2160";
+export type VideoFps = "24" | "30" | "60";
 
 export type RecorderMime = {
   mime: string;
@@ -21,21 +22,39 @@ const ASPECT: Record<VideoAspect, number> = {
   "4:3": 4 / 3,
 };
 
-export const VIDEO_ASPECTS: { id: VideoAspect; label: string; hint: string }[] = [
-  { id: "16:9", label: "16:9", hint: "Widescreen — the usual desktop frame." },
-  { id: "9:16", label: "9:16", hint: "Tall frame for stories and phones." },
-  { id: "1:1", label: "1:1", hint: "Square frame." },
-  { id: "4:3", label: "4:3", hint: "Classic 4:3 frame." },
+const LONG_EDGE: Record<VideoQuality, number> = {
+  "720": 1280,
+  "1080": 1920,
+  "1440": 2560,
+  "2160": 3840,
+};
+
+export const VIDEO_ASPECTS: { id: VideoAspect; label: string }[] = [
+  { id: "16:9", label: "16:9" },
+  { id: "9:16", label: "9:16" },
+  { id: "1:1", label: "1:1" },
+  { id: "4:3", label: "4:3" },
 ];
 
-export const VIDEO_QUALITIES: { id: VideoQuality; label: string; hint: string }[] = [
-  { id: "720", label: "720", hint: "720 along the short edge. Lighter file." },
-  { id: "1080", label: "1080", hint: "1080 along the short edge. Default." },
-  { id: "1440", label: "1440", hint: "1440 along the short edge. Heavier file." },
+export const VIDEO_QUALITIES: { id: VideoQuality; label: string }[] = [
+  { id: "720", label: "720" },
+  { id: "1080", label: "1080" },
+  { id: "1440", label: "1440" },
+  { id: "2160", label: "4K" },
 ];
+
+export const VIDEO_FPS: { id: VideoFps; label: string; fps: number }[] = [
+  { id: "24", label: "24", fps: 24 },
+  { id: "30", label: "30", fps: 30 },
+  { id: "60", label: "60", fps: 60 },
+];
+
+export function fpsValue(id: VideoFps): number {
+  return id === "24" ? 24 : id === "60" ? 60 : 30;
+}
 
 export function exportSize(aspect: VideoAspect, quality: VideoQuality): { width: number; height: number } {
-  const long = quality === "720" ? 1280 : quality === "1440" ? 2560 : 1920;
+  const long = LONG_EDGE[quality];
   const ratio = ASPECT[aspect];
   let width: number;
   let height: number;
@@ -54,16 +73,22 @@ export function exportSize(aspect: VideoAspect, quality: VideoQuality): { width:
 export function pickRecorderMime(withAudio: boolean): RecorderMime {
   const mp4 = withAudio
     ? [
+        `video/mp4;codecs="avc1.640034,mp4a.40.2"`,
+        `video/mp4;codecs="avc1.640033,mp4a.40.2"`,
         `video/mp4;codecs="avc1.640028,mp4a.40.2"`,
         `video/mp4;codecs="avc1.4d0028,mp4a.40.2"`,
         `video/mp4;codecs="avc1.42E01E,mp4a.40.2"`,
+        "video/mp4;codecs=avc1.640034,mp4a.40.2",
         "video/mp4;codecs=avc1.640028,mp4a.40.2",
         "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
         "video/mp4",
       ]
     : [
+        `video/mp4;codecs="avc1.640034"`,
+        `video/mp4;codecs="avc1.640033"`,
         `video/mp4;codecs="avc1.640028"`,
         `video/mp4;codecs="avc1.42E01E"`,
+        "video/mp4;codecs=avc1.640034",
         "video/mp4;codecs=avc1.42E01E",
         "video/mp4",
       ];
@@ -82,8 +107,9 @@ export function pickRecorderMime(withAudio: boolean): RecorderMime {
   return { mime: "", ext: "webm" };
 }
 
-export function videoBitrate(width: number, height: number): number {
-  return Math.min(24_000_000, Math.max(5_000_000, width * height * 4));
+export function videoBitrate(width: number, height: number, fps = 30): number {
+  const fpsScale = Math.max(1, fps / 30);
+  return Math.min(80_000_000, Math.max(5_000_000, Math.round(width * height * 4 * fpsScale)));
 }
 
 export function downloadBlob(blob: Blob, filename: string): void {
@@ -135,6 +161,15 @@ export class CaptureSession {
       return false;
     }
     if ("contentHint" in videoTrack) videoTrack.contentHint = "detail";
+    try {
+      void videoTrack.applyConstraints({
+        width: { ideal: width },
+        height: { ideal: height },
+        frameRate: { ideal: fps },
+      });
+    } catch {
+      /* constraints are best-effort */
+    }
 
     const tracks: MediaStreamTrack[] = [videoTrack];
     for (const track of audioStream.getAudioTracks()) {
@@ -142,7 +177,7 @@ export class CaptureSession {
     }
     const mixed = new MediaStream(tracks);
     const hasAudio = mixed.getAudioTracks().length > 0;
-    const recorder = createRecorder(mixed, width, height, hasAudio);
+    const recorder = createRecorder(mixed, width, height, hasAudio, fps);
     if (!recorder) {
       videoTrack.stop();
       this.note = note("record.noSupport");
@@ -231,9 +266,15 @@ function mimeExt(mime: string): "mp4" | "webm" {
   return mime.includes("mp4") ? "mp4" : "webm";
 }
 
-function createRecorder(stream: MediaStream, width: number, height: number, hasAudio: boolean): MediaRecorder | null {
+function createRecorder(
+  stream: MediaStream,
+  width: number,
+  height: number,
+  hasAudio: boolean,
+  fps: number,
+): MediaRecorder | null {
   const picked = pickRecorderMime(hasAudio);
-  const bitrate = videoBitrate(width, height);
+  const bitrate = videoBitrate(width, height, fps);
   const attempts: MediaRecorderOptions[] = [];
   if (picked.mime) {
     const withRates: MediaRecorderOptions = { mimeType: picked.mime, videoBitsPerSecond: bitrate };

@@ -21,13 +21,11 @@
       "status": 200,
       "title": "Air on Celestial Strings",
       "hasCanvas": true,
-      "bodyTextLen": 764,
-      "bodyTextHash": "ef27cd4a008874c7ae832c1791915d69788f6826daf8750778db87a7bb379d1f",
+      "bodyTextLen": 533,
+      "bodyTextHash": "73c923d92e6d5872df7cb63e3234856926c5e90b23033d58366b0c9fd997c831",
       "bodyTextPrefix": "English Српски A LIVING ORRERY Air on Celestial Strings Made by ",
       "horizontalOverflow": false,
-      "consoleErrors": [
-        "Failed to load resource: the server responded with a status of 429 ()"
-      ],
+      "consoleErrors": [],
       "pageErrors": [],
       "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
     }

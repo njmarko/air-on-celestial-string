@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { FXAAPass } from "three/addons/postprocessing/FXAAPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -13,6 +14,7 @@ import {
   CaptureSession,
   downloadBlob,
   exportSize,
+  fpsValue,
   stampFilename,
 } from "./recorder";
 import { Starfield } from "./starfield";
@@ -30,6 +32,7 @@ import type {
   RhythmBand,
   RhythmMode,
   VideoAspect,
+  VideoFps,
   VideoQuality,
   OrbitDir,
   VizSnapshot,
@@ -44,7 +47,9 @@ export class SceneManager {
   speed = 1;
   spinFactor = 0.01;
   linesPerSec = 6;
-  trailDuration = 40;
+  trailDuration = 60;
+  pathWidth = 1.5;
+  stringWidth = 2;
   orbitMode: OrbitMode = "realistic";
   background: BackgroundType = "milkyway";
   parallax = true;
@@ -58,6 +63,7 @@ export class SceneManager {
   private renderer: THREE.WebGLRenderer;
   private composer: EffectComposer | null = null;
   private bloomPass: UnrealBloomPass | null = null;
+  private fxaaPass: FXAAPass | null = null;
   private controls: OrbitControls;
   private timer = new THREE.Timer();
   private raycaster = new THREE.Raycaster();
@@ -85,6 +91,8 @@ export class SceneManager {
   recordNote: LocNote = EMPTY_NOTE;
   videoAspect: VideoAspect = "16:9";
   videoQuality: VideoQuality = "1080";
+  videoFps: VideoFps = "30";
+  antialias = true;
   private hiResBusy = false;
   private ultraComplete = false;
   private ultraAbort: AbortController | null = null;
@@ -132,14 +140,17 @@ export class SceneManager {
       for (const tex of Object.values(this.pack.maps)) tex.anisotropy = ani;
     }
 
+    this.antialias = !mobile;
     this.useBloom = !mobile;
-    if (this.useBloom) {
-      this.composer = new EffectComposer(this.renderer);
-      this.composer.addPass(new RenderPass(this.scene, this.camera));
-      this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.02, 0.55, 0.18);
-      this.composer.addPass(this.bloomPass);
-      this.composer.addPass(new OutputPass());
-    }
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.02, 0.55, 0.18);
+    this.bloomPass.enabled = this.useBloom;
+    this.composer.addPass(this.bloomPass);
+    this.composer.addPass(new OutputPass());
+    this.fxaaPass = new FXAAPass();
+    this.fxaaPass.enabled = this.antialias;
+    this.composer.addPass(this.fxaaPass);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
@@ -182,11 +193,14 @@ export class SceneManager {
       linesPerSec: this.linesPerSec,
       maxWeave: this.audio.maxWeave,
       trailDuration: this.trailDuration,
+      pathWidth: this.pathWidth,
+      stringWidth: this.stringWidth,
       orbitMode: this.orbitMode,
       background: this.background,
       parallax: this.parallax,
       ambient: this.ambientLight.intensity,
       bloom: this.bloomPass?.strength ?? 0,
+      antialias: this.antialias,
       ringBrightness: this.ringBrightness,
       selectedCount: this.selected.length,
       canCreate: this.selected.length === 2,
@@ -201,6 +215,7 @@ export class SceneManager {
       recordFormat: this.capture?.ext === "mp4" ? "MP4" : this.capture ? "WebM" : "",
       videoAspect: this.videoAspect,
       videoQuality: this.videoQuality,
+      videoFps: this.videoFps,
       bodies: this.bodyRows(),
       connections: this.connRows(),
       audio: {
@@ -280,6 +295,16 @@ export class SceneManager {
     this.trailDuration = Math.max(0, value);
   }
 
+  setPathWidth(value: number): void {
+    this.pathWidth = THREE.MathUtils.clamp(value, 0.25, 16);
+    for (const path of this.paths.values()) path.setWidth(this.pathWidth);
+  }
+
+  setStringWidth(value: number): void {
+    this.stringWidth = THREE.MathUtils.clamp(value, 0.25, 24);
+    for (const conn of this.connections) conn.setWidth(this.stringWidth);
+  }
+
   setOrbitMode(mode: OrbitMode): void {
     if (mode === "hidden") {
       this.orbitMode = "hidden";
@@ -309,6 +334,11 @@ export class SceneManager {
 
   setBloom(value: number): void {
     if (this.bloomPass) this.bloomPass.strength = Math.max(0, value);
+  }
+
+  setAntialias(value: boolean): void {
+    this.antialias = value;
+    if (this.fxaaPass) this.fxaaPass.enabled = value;
   }
 
   setRingBrightness(value: number): void {
@@ -691,18 +721,24 @@ export class SceneManager {
     this.videoQuality = quality;
   }
 
+  setVideoFps(fps: VideoFps): void {
+    this.videoFps = fps;
+  }
+
   startRecording(aspect?: VideoAspect, quality?: VideoQuality): void {
     if (this.recording) return;
     if (aspect) this.videoAspect = aspect;
     if (quality) this.videoQuality = quality;
-    const { width, height } = exportSize(this.videoAspect, this.videoQuality);
+    const raw = exportSize(this.videoAspect, this.videoQuality);
+    const { width, height } = this.clampExportSize(raw.width, raw.height);
+    const fps = fpsValue(this.videoFps);
     this.prepareExportFrame(width, height);
     this.audio.ensureContext();
-    if (this.composer && this.useBloom) this.composer.render();
+    if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
 
     const session = new CaptureSession();
-    const ok = session.start(this.renderer.domElement, this.audio.captureStream(), width, height, 30);
+    const ok = session.start(this.renderer.domElement, this.audio.captureStream(), width, height, fps);
     if (!ok) {
       this.restoreExportFrame();
       this.recordNote = session.note.key ? session.note : note("record.noSupport");
@@ -755,6 +791,16 @@ export class SceneManager {
     this.renderer.setSize(w, h, false);
     this.composer?.setSize(w, h);
     this.bloomPass?.setSize(w, h);
+  }
+
+  private clampExportSize(width: number, height: number): { width: number; height: number } {
+    const max = Math.min(this.renderer.capabilities.maxTextureSize || 8192, 8192);
+    if (width <= max && height <= max) return { width, height };
+    const scale = max / Math.max(width, height);
+    return {
+      width: Math.max(2, Math.round((width * scale) / 2) * 2),
+      height: Math.max(2, Math.round((height * scale) / 2) * 2),
+    };
   }
 
   private prepareExportFrame(width: number, height: number): void {
@@ -893,7 +939,7 @@ export class SceneManager {
       conn.update();
     }
 
-    if (this.composer && this.useBloom) this.composer.render();
+    if (this.composer) this.composer.render();
     else this.renderer.render(this.scene, this.camera);
 
     this.ready = true;
@@ -918,7 +964,7 @@ export class SceneManager {
         const host = parent?.group ?? this.scene;
         const ecc = this.orbitMode === "circular" ? 0 : def.eccentricity;
         const color = this.pathColors[def.name.toLowerCase()] ?? "#8aa4b8";
-        const path = new OrbitPath(host, def.semiMajor, ecc, new THREE.Color(color).getHex());
+        const path = new OrbitPath(host, def.semiMajor, ecc, new THREE.Color(color).getHex(), this.pathWidth);
         planet.setOrbitPath(path.mesh);
         this.paths.set(def.name.toLowerCase(), path);
       }
@@ -937,7 +983,7 @@ export class SceneManager {
       const ecc = this.orbitMode === "circular" ? 0 : body.originalEccentricity;
       const host = body.parentBody?.group ?? this.scene;
       const color = this.pathColors[body.name.toLowerCase()] ?? "#8aa4b8";
-      const path = new OrbitPath(host, body.semiMajor, ecc, new THREE.Color(color).getHex());
+      const path = new OrbitPath(host, body.semiMajor, ecc, new THREE.Color(color).getHex(), this.pathWidth);
       body.setOrbitPath(path.mesh);
       this.paths.set(body.name.toLowerCase(), path);
     }
@@ -961,7 +1007,7 @@ export class SceneManager {
       (c) => (c.body1 === a && c.body2 === b) || (c.body1 === b && c.body2 === a),
     );
     if (exists) return null;
-    const conn = new Connection(this.scene, a, b, color);
+    const conn = new Connection(this.scene, a, b, color, this.stringWidth);
     conn.id = `conn-${++this.connCount}`;
     conn.maxAge = this.trailDuration;
     conn.rhythmType = rhythm;

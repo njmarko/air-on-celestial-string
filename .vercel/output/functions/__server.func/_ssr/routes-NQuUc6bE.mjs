@@ -2,10 +2,10 @@ import { i as __toESM } from "../_runtime.mjs";
 import { L as require_react, v as require_jsx_runtime } from "../_libs/@tanstack/react-router+[...].mjs";
 import { _ as ListMusic, a as Upload, c as Square, d as Pause, f as Orbit, g as Lock, h as Maximize2, i as Video, l as Plus, m as Minus, n as VolumeX, p as Music, r as Volume2, s as Trash2, t as X, u as Play, v as Eye, y as EyeOff } from "../_libs/lucide-react.mjs";
 import { t as create } from "../_libs/zustand.mjs";
-import { a as hydrateLocale, c as useT, i as htmlLangFor, l as LANGUAGES, n as bodyName, o as useLocale, r as formatNote, s as useLocaleStore, u as __exportAll } from "./router-fV0YK9ce.mjs";
+import { a as hydrateLocale, c as useT, i as htmlLangFor, l as LANGUAGES, n as bodyName, o as useLocale, r as formatNote, s as useLocaleStore, u as __exportAll } from "./router-CnfN0y8V.mjs";
 import { t as clsx } from "../_libs/clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-e8d26f-f.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-NQuUc6bE.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -69,47 +69,70 @@ var ASPECT = {
 	"1:1": 1,
 	"4:3": 4 / 3
 };
+var LONG_EDGE = {
+	"720": 1280,
+	"1080": 1920,
+	"1440": 2560,
+	"2160": 3840
+};
 var VIDEO_ASPECTS = [
 	{
 		id: "16:9",
-		label: "16:9",
-		hint: "Widescreen — the usual desktop frame."
+		label: "16:9"
 	},
 	{
 		id: "9:16",
-		label: "9:16",
-		hint: "Tall frame for stories and phones."
+		label: "9:16"
 	},
 	{
 		id: "1:1",
-		label: "1:1",
-		hint: "Square frame."
+		label: "1:1"
 	},
 	{
 		id: "4:3",
-		label: "4:3",
-		hint: "Classic 4:3 frame."
+		label: "4:3"
 	}
 ];
 var VIDEO_QUALITIES = [
 	{
 		id: "720",
-		label: "720",
-		hint: "720 along the short edge. Lighter file."
+		label: "720"
 	},
 	{
 		id: "1080",
-		label: "1080",
-		hint: "1080 along the short edge. Default."
+		label: "1080"
 	},
 	{
 		id: "1440",
-		label: "1440",
-		hint: "1440 along the short edge. Heavier file."
+		label: "1440"
+	},
+	{
+		id: "2160",
+		label: "4K"
 	}
 ];
+var VIDEO_FPS = [
+	{
+		id: "24",
+		label: "24",
+		fps: 24
+	},
+	{
+		id: "30",
+		label: "30",
+		fps: 30
+	},
+	{
+		id: "60",
+		label: "60",
+		fps: 60
+	}
+];
+function fpsValue(id) {
+	return id === "24" ? 24 : id === "60" ? 60 : 30;
+}
 function exportSize(aspect, quality) {
-	const long = quality === "720" ? 1280 : quality === "1440" ? 2560 : 1920;
+	const long = LONG_EDGE[quality];
 	const ratio = ASPECT[aspect];
 	let width;
 	let height;
@@ -129,15 +152,21 @@ function exportSize(aspect, quality) {
 }
 function pickRecorderMime(withAudio) {
 	const mp4 = withAudio ? [
+		`video/mp4;codecs="avc1.640034,mp4a.40.2"`,
+		`video/mp4;codecs="avc1.640033,mp4a.40.2"`,
 		`video/mp4;codecs="avc1.640028,mp4a.40.2"`,
 		`video/mp4;codecs="avc1.4d0028,mp4a.40.2"`,
 		`video/mp4;codecs="avc1.42E01E,mp4a.40.2"`,
+		"video/mp4;codecs=avc1.640034,mp4a.40.2",
 		"video/mp4;codecs=avc1.640028,mp4a.40.2",
 		"video/mp4;codecs=avc1.42E01E,mp4a.40.2",
 		"video/mp4"
 	] : [
+		`video/mp4;codecs="avc1.640034"`,
+		`video/mp4;codecs="avc1.640033"`,
 		`video/mp4;codecs="avc1.640028"`,
 		`video/mp4;codecs="avc1.42E01E"`,
+		"video/mp4;codecs=avc1.640034",
 		"video/mp4;codecs=avc1.42E01E",
 		"video/mp4"
 	];
@@ -165,8 +194,9 @@ function pickRecorderMime(withAudio) {
 		ext: "webm"
 	};
 }
-function videoBitrate(width, height) {
-	return Math.min(24e6, Math.max(5e6, width * height * 4));
+function videoBitrate(width, height, fps = 30) {
+	const fpsScale = Math.max(1, fps / 30);
+	return Math.min(8e7, Math.max(5e6, Math.round(width * height * 4 * fpsScale)));
 }
 function downloadBlob(blob, filename) {
 	const url = URL.createObjectURL(blob);
@@ -212,10 +242,17 @@ var CaptureSession = class {
 			return false;
 		}
 		if ("contentHint" in videoTrack) videoTrack.contentHint = "detail";
+		try {
+			videoTrack.applyConstraints({
+				width: { ideal: width },
+				height: { ideal: height },
+				frameRate: { ideal: fps }
+			});
+		} catch {}
 		const tracks = [videoTrack];
 		for (const track of audioStream.getAudioTracks()) if (track.readyState === "live") tracks.push(track);
 		const mixed = new MediaStream(tracks);
-		const recorder = createRecorder(mixed, width, height, mixed.getAudioTracks().length > 0);
+		const recorder = createRecorder(mixed, width, height, mixed.getAudioTracks().length > 0, fps);
 		if (!recorder) {
 			videoTrack.stop();
 			this.note = note("record.noSupport");
@@ -292,9 +329,9 @@ var CaptureSession = class {
 function mimeExt(mime) {
 	return mime.includes("mp4") ? "mp4" : "webm";
 }
-function createRecorder(stream, width, height, hasAudio) {
+function createRecorder(stream, width, height, hasAudio, fps) {
 	const picked = pickRecorderMime(hasAudio);
-	const bitrate = videoBitrate(width, height);
+	const bitrate = videoBitrate(width, height, fps);
 	const attempts = [];
 	if (picked.mime) {
 		const withRates = {
@@ -335,12 +372,15 @@ var initialSnapshot = {
 	spinFactor: .01,
 	linesPerSec: 6,
 	maxWeave: 14,
-	trailDuration: 40,
+	trailDuration: 60,
+	pathWidth: 1.5,
+	stringWidth: 2,
 	orbitMode: "realistic",
 	background: "milkyway",
 	parallax: true,
 	ambient: 1,
 	bloom: .02,
+	antialias: true,
 	ringBrightness: 1.4,
 	selectedCount: 0,
 	canCreate: false,
@@ -355,6 +395,7 @@ var initialSnapshot = {
 	recordFormat: "",
 	videoAspect: "16:9",
 	videoQuality: "1080",
+	videoFps: "30",
 	bodies: [],
 	connections: [],
 	audio: {
@@ -391,7 +432,7 @@ var initialSnapshot = {
 };
 var useVizStore = create(() => initialSnapshot);
 if (typeof document !== "undefined") {
-	import("./scene-manager-BDJVJ-qU.mjs");
+	import("./scene-manager-Bs2QSkC4.mjs");
 	import("./texture-pack-BaRlWae6.mjs").then((n) => n.n).then((m) => m.prefetchTexturePack());
 }
 function VizCanvas() {
@@ -406,7 +447,7 @@ function VizCanvas() {
 		let last = 0;
 		let dispose = null;
 		const mobile = (host.clientWidth || window.innerWidth) < 700;
-		Promise.all([import("./scene-manager-BDJVJ-qU.mjs"), import("./texture-pack-BaRlWae6.mjs").then((n) => n.n).then((m) => m.loadTexturePack(mobile))]).then(([{ SceneManager }, pack]) => {
+		Promise.all([import("./scene-manager-Bs2QSkC4.mjs"), import("./texture-pack-BaRlWae6.mjs").then((n) => n.n).then((m) => m.loadTexturePack(mobile))]).then(([{ SceneManager }, pack]) => {
 			if (cancelled || !host) {
 				pack.dispose();
 				return;
@@ -678,15 +719,23 @@ var ASPECT_HINT = {
 var QUALITY_HINT = {
 	"720": "record.q720",
 	"1080": "record.q1080",
-	"1440": "record.q1440"
+	"1440": "record.q1440",
+	"2160": "record.q2160"
+};
+var FPS_HINT = {
+	"24": "record.fps24",
+	"30": "record.fps30",
+	"60": "record.fps60"
 };
 function ExportFields({ onStart }) {
 	const t = useT();
 	const aspect = useVizStore((s) => s.videoAspect);
 	const quality = useVizStore((s) => s.videoQuality);
+	const videoFps = useVizStore((s) => s.videoFps);
 	const recording = useVizStore((s) => s.recording);
 	const recordNote = useVizStore((s) => s.recordNote);
 	const size = exportSize(aspect, quality);
+	const fps = fpsValue(videoFps);
 	const noteText = formatNote(t, recordNote);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "space-y-2",
@@ -711,11 +760,22 @@ function ExportFields({ onStart }) {
 				})),
 				onChange: (value) => act((engine) => engine.setVideoQuality(value))
 			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
+				label: t("record.fps"),
+				value: videoFps,
+				options: VIDEO_FPS.map((item) => ({
+					id: item.id,
+					label: item.label,
+					hint: t(FPS_HINT[item.id])
+				})),
+				onChange: (value) => act((engine) => engine.setVideoFps(value))
+			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 				className: "px-1 text-xs tabular-nums text-faint",
 				children: t("record.size", {
 					width: size.width,
-					height: size.height
+					height: size.height,
+					fps
 				})
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -748,8 +808,10 @@ function RecPill() {
 	const autoOrbit = useVizStore((s) => s.autoOrbit);
 	const aspect = useVizStore((s) => s.videoAspect);
 	const quality = useVizStore((s) => s.videoQuality);
+	const videoFps = useVizStore((s) => s.videoFps);
 	if (!recording) return null;
 	const size = exportSize(aspect, quality);
+	const fps = fpsValue(videoFps);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 		className: "overlay-safe pointer-events-none absolute inset-0 z-50",
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -772,7 +834,9 @@ function RecPill() {
 								" · ",
 								size.width,
 								"×",
-								size.height
+								size.height,
+								" · ",
+								fps
 							]
 						})
 					]
@@ -1261,11 +1325,14 @@ function MixPanel({ onRecordStart }) {
 	const linesPerSec = useVizStore((s) => s.linesPerSec);
 	const maxWeave = useVizStore((s) => s.maxWeave);
 	const trailDuration = useVizStore((s) => s.trailDuration);
+	const pathWidth = useVizStore((s) => s.pathWidth);
+	const stringWidth = useVizStore((s) => s.stringWidth);
 	const orbitMode = useVizStore((s) => s.orbitMode);
 	const background = useVizStore((s) => s.background);
 	const parallax = useVizStore((s) => s.parallax);
 	const ambient = useVizStore((s) => s.ambient);
 	const bloom = useVizStore((s) => s.bloom);
+	const antialias = useVizStore((s) => s.antialias);
 	const ringBrightness = useVizStore((s) => s.ringBrightness);
 	const hiRes = useVizStore((s) => s.hiRes);
 	const hiResNote = useVizStore((s) => s.hiResNote);
@@ -1410,6 +1477,16 @@ function MixPanel({ onRecordStart }) {
 					display: t("mix.trailDisplay", { n: Math.round(trailDuration) }),
 					onChange: (value) => act((engine) => engine.setTrailDuration(value))
 				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
+					label: t("mix.stringWidth"),
+					hint: t("mix.stringWidthHint"),
+					min: .5,
+					max: 16,
+					step: .25,
+					value: stringWidth,
+					display: t("mix.widthDisplay", { n: stringWidth.toFixed(2) }),
+					onChange: (value) => act((engine) => engine.setStringWidth(value))
+				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
 					label: t("mix.paths"),
 					options: [
@@ -1431,6 +1508,16 @@ function MixPanel({ onRecordStart }) {
 					],
 					value: orbitMode,
 					onChange: (value) => act((engine) => engine.setOrbitMode(value))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
+					label: t("mix.pathWidth"),
+					hint: t("mix.pathWidthHint"),
+					min: .5,
+					max: 12,
+					step: .25,
+					value: pathWidth,
+					display: t("mix.widthDisplay", { n: pathWidth.toFixed(2) }),
+					onChange: (value) => act((engine) => engine.setPathWidth(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Segmented, {
 					label: t("mix.sky"),
@@ -1489,6 +1576,12 @@ function MixPanel({ onRecordStart }) {
 					value: bloom,
 					display: bloom.toFixed(2),
 					onChange: (value) => act((engine) => engine.setBloom(value))
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToggleRow, {
+					label: t("mix.aa"),
+					hint: t("mix.aaHint"),
+					checked: antialias,
+					onChange: (value) => act((engine) => engine.setAntialias(value))
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(RangeField, {
 					label: t("mix.rings"),
@@ -2070,4 +2163,4 @@ function Home() {
 	});
 }
 //#endregion
-export { stampFilename as a, note as c, exportSize as i, libraryTrack as l, CaptureSession as n, formatTime as o, downloadBlob as r, EMPTY_NOTE as s, routes_exports as t };
+export { fpsValue as a, EMPTY_NOTE as c, exportSize as i, note as l, CaptureSession as n, stampFilename as o, downloadBlob as r, formatTime as s, routes_exports as t, libraryTrack as u };

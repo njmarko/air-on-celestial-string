@@ -15,7 +15,7 @@ var __exportAll = (all, no_symbols) => {
 	return target;
 };
 //#endregion
-//#region node_modules/.nitro/vite/services/ssr/assets/router-fV0YK9ce.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CnfN0y8V.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -146,6 +146,11 @@ var LANGUAGES = [{
 		"mix.trail": "Trail",
 		"mix.trailHint": "How long each strand lingers before fading.",
 		"mix.trailDisplay": "{n}s",
+		"mix.stringWidth": "String thickness",
+		"mix.stringWidthHint": "How thick the woven strings between worlds draw.",
+		"mix.pathWidth": "Path thickness",
+		"mix.pathWidthHint": "How thick the orbit rings draw.",
+		"mix.widthDisplay": "{n} px",
 		"mix.paths": "Paths",
 		"mix.kepler": "Kepler",
 		"mix.keplerHint": "Elliptical orbits, as in the real solar system.",
@@ -169,6 +174,8 @@ var LANGUAGES = [{
 		"mix.ambientHint": "Fill light on the night side of each world. 1 is the default.",
 		"mix.bloom": "Bloom",
 		"mix.bloomHint": "Glow around the sun and bright strings.",
+		"mix.aa": "Antialiasing",
+		"mix.aaHint": "Smooth the edges of worlds and strings. Turn off for a sharper pixel look or a little extra speed.",
 		"mix.rings": "Saturn rings",
 		"mix.ringsHint": "How bright Saturn's rings read against the sky. Raise it if the ice bands look faint.",
 		"mix.reset": "Reset worlds",
@@ -236,6 +243,7 @@ var LANGUAGES = [{
 		"record.videoTitle": "Export video",
 		"record.frame": "Frame",
 		"record.resolution": "Resolution",
+		"record.fps": "Frame rate",
 		"record.blurb": "Only the sky is saved — menus and the cursor stay out of the file. Drag to orbit while it records. MP4 when this browser can encode it.",
 		"record.start": "Start recording",
 		"record.startHint": "Start capturing the orrery and the music that is playing. Menus are not recorded.",
@@ -261,7 +269,11 @@ var LANGUAGES = [{
 		"record.q720": "720 along the short edge. Lighter file.",
 		"record.q1080": "1080 along the short edge. Default.",
 		"record.q1440": "1440 along the short edge. Heavier file.",
-		"record.size": "{width} × {height}",
+		"record.q2160": "4K UHD — 2160 along the short edge. Needs a strong GPU.",
+		"record.fps24": "24 frames per second. Cinematic cadence.",
+		"record.fps30": "30 frames per second. Default.",
+		"record.fps60": "60 frames per second. Smoother motion, heavier file.",
+		"record.size": "{width} × {height} · {fps} fps",
 		"player.play": "Play",
 		"player.pause": "Pause",
 		"player.playHint": "Play the recording. Space also toggles.",
@@ -423,6 +435,11 @@ var LANGUAGES = [{
 		"mix.trail": "Траг",
 		"mix.trailHint": "Колико дуго свака нит остаје пре него што избледи.",
 		"mix.trailDisplay": "{n}s",
+		"mix.stringWidth": "Дебљина струна",
+		"mix.stringWidthHint": "Колико су дебеле исплетене струне међу световима.",
+		"mix.pathWidth": "Дебљина путања",
+		"mix.pathWidthHint": "Колико су дебели прстенови орбита.",
+		"mix.widthDisplay": "{n} px",
 		"mix.paths": "Путање",
 		"mix.kepler": "Кеплер",
 		"mix.keplerHint": "Елиптичне орбите, као у правом Сунчевом систему.",
@@ -446,6 +463,8 @@ var LANGUAGES = [{
 		"mix.ambientHint": "Попуна светлост на ноћној страни сваког света. 1 је подразумевано.",
 		"mix.bloom": "Сјај",
 		"mix.bloomHint": "Сјај око Сунца и светлих струна.",
+		"mix.aa": "Умекшавање ивица",
+		"mix.aaHint": "Заглађује ивице светова и струна. Искључите за оштрије пикселе или мало више брзине.",
 		"mix.rings": "Прстенови Сатурна",
 		"mix.ringsHint": "Колико јасно се прстенови Сатурна виде на небу. Подигните ако ледене траке изгледају бледо.",
 		"mix.reset": "Врати светове",
@@ -513,6 +532,7 @@ var LANGUAGES = [{
 		"record.videoTitle": "Извези видео",
 		"record.frame": "Кадар",
 		"record.resolution": "Резолуција",
+		"record.fps": "Кадрова у секунди",
 		"record.blurb": "Чува се само небо — менији и курсор не улазе у фајл. Превуците да окренете камеру док снима. MP4 када овај прегледач то уме.",
 		"record.start": "Почни снимање",
 		"record.startHint": "Почни да снимаш небо и музику која свира. Менији се не снимају.",
@@ -538,7 +558,11 @@ var LANGUAGES = [{
 		"record.q720": "720 дуж краће ивице. Мањи фајл.",
 		"record.q1080": "1080 дуж краће ивице. Подразумевано.",
 		"record.q1440": "1440 дуж краће ивице. Тежи фајл.",
-		"record.size": "{width} × {height}",
+		"record.q2160": "4K UHD — 2160 дуж краће ивице. Захтева јак GPU.",
+		"record.fps24": "24 кадра у секунди. Филмски ритам.",
+		"record.fps30": "30 кадрова у секунди. Подразумевано.",
+		"record.fps60": "60 кадрова у секунди. Глаткије кретање, тежи фајл.",
+		"record.size": "{width} × {height} · {fps} fps",
 		"player.play": "Пусти",
 		"player.pause": "Пауза",
 		"player.playHint": "Пусти снимак. Размак такође укључује и искључује.",
@@ -964,7 +988,7 @@ var Route$1 = createRootRoute({
 		})]
 	})
 });
-var $$splitComponentImporter = () => import("./routes-e8d26f-f.mjs").then((n) => n.t);
+var $$splitComponentImporter = () => import("./routes-NQuUc6bE.mjs").then((n) => n.t);
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({
 	id: "/",
 	path: "/",

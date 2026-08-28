@@ -1,7 +1,7 @@
-import { a as stampFilename, c as note, i as exportSize, l as libraryTrack, n as CaptureSession, o as formatTime, r as downloadBlob, s as EMPTY_NOTE } from "./routes-e8d26f-f.mjs";
-import { A as Scene, C as PointLight, D as RepeatWrapping, E as Raycaster, F as Texture, I as TextureLoader, L as Timer, M as SphereGeometry, N as Sprite, O as RingGeometry, P as SpriteMaterial, R as Vector2, S as PerspectiveCamera, T as PointsMaterial, a as OrbitControls, b as MeshBasicMaterial, c as BufferAttribute, d as ClampToEdgeWrapping, f as Color, g as LineSegments, h as LineBasicMaterial, i as EffectComposer, j as ShaderMaterial, k as SRGBColorSpace, l as BufferGeometry, m as Line, n as RenderPass, o as WebGLRenderer, p as Group, r as OutputPass, s as AmbientLight, t as UnrealBloomPass, u as CanvasTexture, v as MathUtils, w as Points, x as MeshStandardMaterial, y as Mesh, z as Vector3 } from "../_libs/three.mjs";
+import { a as fpsValue, c as EMPTY_NOTE, i as exportSize, l as note, n as CaptureSession, o as stampFilename, r as downloadBlob, s as formatTime, u as libraryTrack } from "./routes-NQuUc6bE.mjs";
+import { A as RepeatWrapping, B as Timer, C as MeshBasicMaterial, D as Points, E as PointLight, F as SphereGeometry, H as Vector3, I as Sprite, L as SpriteMaterial, M as SRGBColorSpace, N as Scene, O as PointsMaterial, P as ShaderMaterial, R as Texture, S as Mesh, T as PerspectiveCamera, V as Vector2, _ as ClampToEdgeWrapping, a as LineMaterial, c as OutputPass, d as OrbitControls, f as WebGLRenderer, g as CanvasTexture, h as BufferGeometry, i as LineSegmentsGeometry, j as RingGeometry, k as Raycaster, l as FXAAPass, m as BufferAttribute, n as LineGeometry, o as UnrealBloomPass, p as AmbientLight, r as LineSegments2, s as RenderPass, t as Line2, u as EffectComposer, v as Color, w as MeshStandardMaterial, x as MathUtils, y as Group, z as TextureLoader } from "../_libs/three.mjs";
 import { t as configureTexture } from "./texture-pack-BaRlWae6.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/scene-manager-BDJVJ-qU.js
+//#region node_modules/.nitro/vite/services/ssr/assets/scene-manager-Bs2QSkC4.js
 function writeString(view, offset, value) {
 	for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
 }
@@ -1343,20 +1343,6 @@ async function decodeAndAnalyze(src, signal) {
 	if (signal.aborted) throw new DOMException("Aborted", "AbortError");
 	return analyzeMixBuffer(await new OfflineAudioContext(1, 44100, 44100).decodeAudioData(bytes.slice(0)), signal);
 }
-var VERT_SRC = `
-  attribute vec4 aColor;
-  varying vec4 vColor;
-  void main() {
-    vColor = aColor;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-var FRAG_SRC = `
-  varying vec4 vColor;
-  void main() {
-    gl_FragColor = vColor;
-  }
-`;
 var Connection = class {
 	id = "";
 	body1;
@@ -1377,29 +1363,32 @@ var Connection = class {
 	geometry;
 	material;
 	line;
-	pos = /* @__PURE__ */ new Float32Array(6);
-	col = /* @__PURE__ */ new Float32Array(8);
+	pos;
+	col;
 	_p1 = new Vector3();
 	_p2 = new Vector3();
 	maxSegments = 4e3;
-	constructor(scene, body1, body2, color = 8978346) {
+	constructor(scene, body1, body2, color = 8978346, width = 2) {
 		this.scene = scene;
 		this.body1 = body1;
 		this.body2 = body2;
 		this.color = new Color(color);
-		this.geometry = new BufferGeometry();
-		this.geometry.setAttribute("position", new BufferAttribute(this.pos, 3));
-		this.geometry.setAttribute("aColor", new BufferAttribute(this.col, 4));
-		this.geometry.setDrawRange(0, 0);
-		this.material = new ShaderMaterial({
-			vertexShader: VERT_SRC,
-			fragmentShader: FRAG_SRC,
+		this.pos = new Float32Array(this.maxSegments * 6);
+		this.col = new Float32Array(this.maxSegments * 6);
+		this.geometry = new LineSegmentsGeometry();
+		this.geometry.setPositions(this.pos);
+		this.geometry.setColors(this.col);
+		this.geometry.instanceCount = 0;
+		this.material = new LineMaterial({
+			color: 16777215,
+			linewidth: width,
+			vertexColors: true,
 			transparent: true,
 			blending: 2,
 			depthWrite: false,
-			depthTest: true
+			toneMapped: false
 		});
-		this.line = new LineSegments(this.geometry, this.material);
+		this.line = new LineSegments2(this.geometry, this.material);
 		this.line.frustumCulled = false;
 		scene.add(this.line);
 	}
@@ -1421,17 +1410,10 @@ var Connection = class {
 			this.segments = this.segments.filter((seg) => now - seg.time <= maxMs);
 		}
 		const count = this.segments.length;
-		const need = Math.max(1, count) * 6;
-		if (this.pos.length < need) {
-			const cap = Math.max(need, this.pos.length * 2);
-			this.pos = new Float32Array(cap);
-			this.col = new Float32Array(cap / 3 * 4);
-			this.geometry.setAttribute("position", new BufferAttribute(this.pos, 3));
-			this.geometry.setAttribute("aColor", new BufferAttribute(this.col, 4));
-		}
+		const col = this.color;
+		let drawn = 0;
 		let v = 0;
 		let c = 0;
-		const col = this.color;
 		for (let i = 0; i < count; i++) {
 			const seg = this.segments[i];
 			const age = (now - seg.time) / 1e3;
@@ -1445,21 +1427,23 @@ var Connection = class {
 			this.pos[v++] = seg.p2.x;
 			this.pos[v++] = seg.p2.y;
 			this.pos[v++] = seg.p2.z;
-			this.col[c++] = col.r;
-			this.col[c++] = col.g;
-			this.col[c++] = col.b;
-			this.col[c++] = alpha;
-			this.col[c++] = col.r;
-			this.col[c++] = col.g;
-			this.col[c++] = col.b;
-			this.col[c++] = alpha;
+			const r = col.r * alpha;
+			const g = col.g * alpha;
+			const b = col.b * alpha;
+			this.col[c++] = r;
+			this.col[c++] = g;
+			this.col[c++] = b;
+			this.col[c++] = r;
+			this.col[c++] = g;
+			this.col[c++] = b;
+			drawn++;
 		}
-		const posAttr = this.geometry.getAttribute("position");
-		const colAttr = this.geometry.getAttribute("aColor");
-		posAttr.needsUpdate = true;
-		colAttr.needsUpdate = true;
-		this.geometry.setDrawRange(0, v / 3 | 0);
-		this.geometry.computeBoundingSphere();
+		const start = this.geometry.getAttribute("instanceStart");
+		const colorStart = this.geometry.getAttribute("instanceColorStart");
+		if (start) start.needsUpdate = true;
+		if (colorStart) colorStart.needsUpdate = true;
+		this.geometry.instanceCount = drawn;
+		this.line.visible = this.visible && drawn > 0;
 	}
 	setColor(newColor) {
 		this.color.set(newColor);
@@ -1467,9 +1451,12 @@ var Connection = class {
 	setBaseAlpha(alpha) {
 		this.baseAlpha = MathUtils.clamp(alpha, 0, 1);
 	}
+	setWidth(width) {
+		this.material.linewidth = Math.max(.25, width);
+	}
 	setVisible(isVisible) {
 		this.visible = isVisible;
-		this.line.visible = isVisible;
+		this.line.visible = isVisible && this.segments.length > 0;
 	}
 	segmentCount() {
 		return this.segments.length;
@@ -1477,7 +1464,8 @@ var Connection = class {
 	clear() {
 		this.segments = [];
 		this.weaveAcc = 0;
-		this.geometry.setDrawRange(0, 0);
+		this.geometry.instanceCount = 0;
+		this.line.visible = false;
 	}
 	dispose() {
 		this.scene.remove(this.line);
@@ -1512,7 +1500,7 @@ var OrbitPath = class {
 	mesh;
 	geometry;
 	material;
-	constructor(host, semiMajor, eccentricity = 0, color = 4500223) {
+	constructor(host, semiMajor, eccentricity = 0, color = 4500223, width = 1.5) {
 		const points = [];
 		const segments = 256;
 		for (let i = 0; i <= segments; i++) {
@@ -1520,19 +1508,25 @@ var OrbitPath = class {
 			const pos = OrbitMath.getPosition(semiMajor, eccentricity, theta);
 			points.push(new Vector3(pos.x, 0, pos.z));
 		}
-		this.geometry = new BufferGeometry().setFromPoints(points);
-		this.material = new LineBasicMaterial({
+		this.geometry = new LineGeometry();
+		this.geometry.setFromPoints(points);
+		this.material = new LineMaterial({
 			color,
+			linewidth: width,
 			transparent: true,
 			opacity: .42,
 			blending: 2,
-			depthWrite: false
+			depthWrite: false,
+			toneMapped: false
 		});
-		this.mesh = new Line(this.geometry, this.material);
+		this.mesh = new Line2(this.geometry, this.material);
 		host.add(this.mesh);
 	}
 	setColor(color) {
 		this.material.color.set(color);
+	}
+	setWidth(width) {
+		this.material.linewidth = Math.max(.25, width);
 	}
 	dispose() {
 		this.mesh.parent?.remove(this.mesh);
@@ -2500,7 +2494,9 @@ var SceneManager = class {
 	speed = 1;
 	spinFactor = .01;
 	linesPerSec = 6;
-	trailDuration = 40;
+	trailDuration = 60;
+	pathWidth = 1.5;
+	stringWidth = 2;
 	orbitMode = "realistic";
 	background = "milkyway";
 	parallax = true;
@@ -2513,6 +2509,7 @@ var SceneManager = class {
 	renderer;
 	composer = null;
 	bloomPass = null;
+	fxaaPass = null;
 	controls;
 	timer = new Timer();
 	raycaster = new Raycaster();
@@ -2540,6 +2537,8 @@ var SceneManager = class {
 	recordNote = EMPTY_NOTE;
 	videoAspect = "16:9";
 	videoQuality = "1080";
+	videoFps = "30";
+	antialias = true;
 	hiResBusy = false;
 	ultraComplete = false;
 	ultraAbort = null;
@@ -2587,14 +2586,17 @@ var SceneManager = class {
 			const ani = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
 			for (const tex of Object.values(this.pack.maps)) tex.anisotropy = ani;
 		}
+		this.antialias = !mobile;
 		this.useBloom = !mobile;
-		if (this.useBloom) {
-			this.composer = new EffectComposer(this.renderer);
-			this.composer.addPass(new RenderPass(this.scene, this.camera));
-			this.bloomPass = new UnrealBloomPass(new Vector2(w, h), .02, .55, .18);
-			this.composer.addPass(this.bloomPass);
-			this.composer.addPass(new OutputPass());
-		}
+		this.composer = new EffectComposer(this.renderer);
+		this.composer.addPass(new RenderPass(this.scene, this.camera));
+		this.bloomPass = new UnrealBloomPass(new Vector2(w, h), .02, .55, .18);
+		this.bloomPass.enabled = this.useBloom;
+		this.composer.addPass(this.bloomPass);
+		this.composer.addPass(new OutputPass());
+		this.fxaaPass = new FXAAPass();
+		this.fxaaPass.enabled = this.antialias;
+		this.composer.addPass(this.fxaaPass);
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 		this.controls.enableDamping = true;
 		this.controls.dampingFactor = .08;
@@ -2629,11 +2631,14 @@ var SceneManager = class {
 			linesPerSec: this.linesPerSec,
 			maxWeave: this.audio.maxWeave,
 			trailDuration: this.trailDuration,
+			pathWidth: this.pathWidth,
+			stringWidth: this.stringWidth,
 			orbitMode: this.orbitMode,
 			background: this.background,
 			parallax: this.parallax,
 			ambient: this.ambientLight.intensity,
 			bloom: this.bloomPass?.strength ?? 0,
+			antialias: this.antialias,
 			ringBrightness: this.ringBrightness,
 			selectedCount: this.selected.length,
 			canCreate: this.selected.length === 2,
@@ -2648,6 +2653,7 @@ var SceneManager = class {
 			recordFormat: this.capture?.ext === "mp4" ? "MP4" : this.capture ? "WebM" : "",
 			videoAspect: this.videoAspect,
 			videoQuality: this.videoQuality,
+			videoFps: this.videoFps,
 			bodies: this.bodyRows(),
 			connections: this.connRows(),
 			audio: {
@@ -2719,6 +2725,14 @@ var SceneManager = class {
 	setTrailDuration(value) {
 		this.trailDuration = Math.max(0, value);
 	}
+	setPathWidth(value) {
+		this.pathWidth = MathUtils.clamp(value, .25, 16);
+		for (const path of this.paths.values()) path.setWidth(this.pathWidth);
+	}
+	setStringWidth(value) {
+		this.stringWidth = MathUtils.clamp(value, .25, 24);
+		for (const conn of this.connections) conn.setWidth(this.stringWidth);
+	}
 	setOrbitMode(mode) {
 		if (mode === "hidden") {
 			this.orbitMode = "hidden";
@@ -2744,6 +2758,10 @@ var SceneManager = class {
 	}
 	setBloom(value) {
 		if (this.bloomPass) this.bloomPass.strength = Math.max(0, value);
+	}
+	setAntialias(value) {
+		this.antialias = value;
+		if (this.fxaaPass) this.fxaaPass.enabled = value;
 	}
 	setRingBrightness(value) {
 		this.ringBrightness = Math.max(0, value);
@@ -3076,17 +3094,22 @@ var SceneManager = class {
 	setVideoQuality(quality) {
 		this.videoQuality = quality;
 	}
+	setVideoFps(fps) {
+		this.videoFps = fps;
+	}
 	startRecording(aspect, quality) {
 		if (this.recording) return;
 		if (aspect) this.videoAspect = aspect;
 		if (quality) this.videoQuality = quality;
-		const { width, height } = exportSize(this.videoAspect, this.videoQuality);
+		const raw = exportSize(this.videoAspect, this.videoQuality);
+		const { width, height } = this.clampExportSize(raw.width, raw.height);
+		const fps = fpsValue(this.videoFps);
 		this.prepareExportFrame(width, height);
 		this.audio.ensureContext();
-		if (this.composer && this.useBloom) this.composer.render();
+		if (this.composer) this.composer.render();
 		else this.renderer.render(this.scene, this.camera);
 		const session = new CaptureSession();
-		if (!session.start(this.renderer.domElement, this.audio.captureStream(), width, height, 30)) {
+		if (!session.start(this.renderer.domElement, this.audio.captureStream(), width, height, fps)) {
 			this.restoreExportFrame();
 			this.recordNote = session.note.key ? session.note : note("record.noSupport");
 			return;
@@ -3131,6 +3154,18 @@ var SceneManager = class {
 		this.renderer.setSize(w, h, false);
 		this.composer?.setSize(w, h);
 		this.bloomPass?.setSize(w, h);
+	}
+	clampExportSize(width, height) {
+		const max = Math.min(this.renderer.capabilities.maxTextureSize || 8192, 8192);
+		if (width <= max && height <= max) return {
+			width,
+			height
+		};
+		const scale = max / Math.max(width, height);
+		return {
+			width: Math.max(2, Math.round(width * scale / 2) * 2),
+			height: Math.max(2, Math.round(height * scale / 2) * 2)
+		};
 	}
 	prepareExportFrame(width, height) {
 		const canvas = this.renderer.domElement;
@@ -3257,7 +3292,7 @@ var SceneManager = class {
 			conn.maxAge = this.trailDuration;
 			conn.update();
 		}
-		if (this.composer && this.useBloom) this.composer.render();
+		if (this.composer) this.composer.render();
 		else this.renderer.render(this.scene, this.camera);
 		this.ready = true;
 	};
@@ -3276,7 +3311,7 @@ var SceneManager = class {
 				const host = parent?.group ?? this.scene;
 				const ecc = this.orbitMode === "circular" ? 0 : def.eccentricity;
 				const color = this.pathColors[def.name.toLowerCase()] ?? "#8aa4b8";
-				const path = new OrbitPath(host, def.semiMajor, ecc, new Color(color).getHex());
+				const path = new OrbitPath(host, def.semiMajor, ecc, new Color(color).getHex(), this.pathWidth);
 				planet.setOrbitPath(path.mesh);
 				this.paths.set(def.name.toLowerCase(), path);
 			}
@@ -3293,7 +3328,7 @@ var SceneManager = class {
 			const ecc = this.orbitMode === "circular" ? 0 : body.originalEccentricity;
 			const host = body.parentBody?.group ?? this.scene;
 			const color = this.pathColors[body.name.toLowerCase()] ?? "#8aa4b8";
-			const path = new OrbitPath(host, body.semiMajor, ecc, new Color(color).getHex());
+			const path = new OrbitPath(host, body.semiMajor, ecc, new Color(color).getHex(), this.pathWidth);
 			body.setOrbitPath(path.mesh);
 			this.paths.set(body.name.toLowerCase(), path);
 		}
@@ -3305,7 +3340,7 @@ var SceneManager = class {
 	}
 	connectBodies(a, b, rhythm, color) {
 		if (this.connections.some((c) => c.body1 === a && c.body2 === b || c.body1 === b && c.body2 === a)) return null;
-		const conn = new Connection(this.scene, a, b, color);
+		const conn = new Connection(this.scene, a, b, color, this.stringWidth);
 		conn.id = `conn-${++this.connCount}`;
 		conn.maxAge = this.trailDuration;
 		conn.rhythmType = rhythm;
