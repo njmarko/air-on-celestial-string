@@ -188,6 +188,17 @@ export const en = {
   "mix.circleSpeed": "Circle speed",
   "mix.circleSpeedHint": "How fast the camera circles the sun. 0.50 is a slow two-minute orbit.",
   "mix.circleSpeedDisplay": "{speed} · {period}s / orbit",
+  "mix.liftCam": "Lift camera",
+  "mix.liftCamHint":
+    "Glide the camera up or down around the sun. Works together with circle camera, including while recording.",
+  "mix.liftDir": "Lift direction",
+  "mix.liftUp": "Up",
+  "mix.liftUpHint": "Rise toward the north of the solar system.",
+  "mix.liftDown": "Down",
+  "mix.liftDownHint": "Descend toward the south of the solar system.",
+  "mix.liftSpeed": "Lift speed",
+  "mix.liftSpeedHint": "How fast the camera rises or drops. Independent of circle speed.",
+  "mix.liftSpeedDisplay": "{speed} · {period}s pole to pole",
 
   "band.toggleHint": "Turn {name} on or off. Off, strings on this channel stay quiet.",
   "band.playing": "playing",
@@ -258,6 +269,9 @@ export const en = {
   "record.circleOn": "Stop circling the sun. You can still drag the camera.",
   "record.circleOff":
     "Let the camera slowly circle the sun. You can still drag to look around.",
+  "record.lift": "Lift",
+  "record.liftOn": "Stop the camera from rising or dropping. Circle can keep going.",
+  "record.liftOff": "Let the camera rise or drop. Works together with circling.",
   "record.exportHint":
     "Record the sky and the music. Menus and the cursor stay out of the file. You can drag the camera while it records.",
   "record.noSupport": "This browser cannot record video.",

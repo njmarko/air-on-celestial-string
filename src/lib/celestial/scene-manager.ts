@@ -35,6 +35,7 @@ import type {
   VideoFps,
   VideoQuality,
   OrbitDir,
+  ElevateDir,
   VizSnapshot,
 } from "./types";
 
@@ -87,6 +88,9 @@ export class SceneManager {
   autoOrbit = false;
   autoOrbitSpeed = 0.5;
   autoOrbitDir: OrbitDir = "ccw";
+  autoElevate = false;
+  autoElevateSpeed = 0.5;
+  autoElevateDir: ElevateDir = "down";
   recording = false;
   recordNote: LocNote = EMPTY_NOTE;
   videoAspect: VideoAspect = "16:9";
@@ -105,6 +109,8 @@ export class SceneManager {
   private capture: CaptureSession | null = null;
   private exportFrame: { width: number; height: number } | null = null;
   private viewRestore: { width: number; height: number; pixelRatio: number } | null = null;
+  private readonly liftOffset = new THREE.Vector3();
+  private readonly liftSpherical = new THREE.Spherical();
 
   constructor(container: HTMLElement, pack?: TexturePack) {
     this.container = container;
@@ -209,6 +215,9 @@ export class SceneManager {
       autoOrbit: this.autoOrbit,
       autoOrbitSpeed: this.autoOrbitSpeed,
       autoOrbitDir: this.autoOrbitDir,
+      autoElevate: this.autoElevate,
+      autoElevateSpeed: this.autoElevateSpeed,
+      autoElevateDir: this.autoElevateDir,
       recording: this.recording,
       recordElapsed: this.capture?.elapsedSeconds() ?? 0,
       recordNote: this.recordNote,
@@ -707,10 +716,36 @@ export class SceneManager {
     this.applyOrbitSpin();
   }
 
+  setAutoElevate(value: boolean): void {
+    this.autoElevate = value;
+  }
+
+  setAutoElevateSpeed(value: number): void {
+    this.autoElevateSpeed = Math.min(3, Math.max(0.15, value));
+  }
+
+  setAutoElevateDir(dir: ElevateDir): void {
+    this.autoElevateDir = dir;
+  }
+
   private applyOrbitSpin(): void {
     this.controls.autoRotate = this.autoOrbit;
     const sign = this.autoOrbitDir === "ccw" ? 1 : -1;
     this.controls.autoRotateSpeed = this.autoOrbitSpeed * sign;
+  }
+
+  private applyVerticalMove(delta: number): void {
+    if (!this.autoElevate || this.pointer.down) return;
+    this.liftOffset.subVectors(this.camera.position, this.controls.target);
+    this.liftSpherical.setFromVector3(this.liftOffset);
+    const sign = this.autoElevateDir === "up" ? -1 : 1;
+    const angle = ((2 * Math.PI) / 60) * this.autoElevateSpeed * delta * sign;
+    const min = this.controls.minPolarAngle + 0.08;
+    const max = this.controls.maxPolarAngle - 0.08;
+    this.liftSpherical.phi = THREE.MathUtils.clamp(this.liftSpherical.phi + angle, min, max);
+    this.liftOffset.setFromSpherical(this.liftSpherical);
+    this.camera.position.copy(this.controls.target).add(this.liftOffset);
+    this.camera.lookAt(this.controls.target);
   }
 
   setVideoAspect(aspect: VideoAspect): void {
@@ -911,6 +946,7 @@ export class SceneManager {
     const delta = Math.min(this.timer.getDelta(), 0.1);
     this.fps = THREE.MathUtils.lerp(this.fps, 1 / Math.max(delta, 1 / 240), 0.08);
     this.controls.update();
+    this.applyVerticalMove(delta);
     this.audio.followMix(this.audio.audio.currentTime || 0);
 
     if (!this.paused) {

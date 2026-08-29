@@ -8,6 +8,7 @@ export type BackgroundType = "none" | "stars" | "milkyway";
 export type RhythmMode = "simple" | "advanced";
 export type MixStatus = "idle" | "analyzing" | "live" | "failed";
 export type OrbitDir = "ccw" | "cw";
+export type ElevateDir = "up" | "down";
 export type { VideoAspect, VideoFps, VideoQuality };
 
 export type PlanetDef = {
@@ -79,6 +80,9 @@ export type VizSnapshot = {
   autoOrbit: boolean;
   autoOrbitSpeed: number;
   autoOrbitDir: OrbitDir;
+  autoElevate: boolean;
+  autoElevateSpeed: number;
+  autoElevateDir: ElevateDir;
   recording: boolean;
   recordElapsed: number;
   recordNote: LocNote;

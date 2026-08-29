@@ -1,7 +1,7 @@
 import { Square } from "lucide-react";
 import { formatNote, useT } from "@/i18n/use-i18n";
 import { exportSize, fpsValue, VIDEO_ASPECTS, VIDEO_FPS, VIDEO_QUALITIES } from "@/lib/celestial/recorder";
-import type { OrbitDir, VideoAspect, VideoFps, VideoQuality } from "@/lib/celestial/types";
+import type { ElevateDir, OrbitDir, VideoAspect, VideoFps, VideoQuality } from "@/lib/celestial/types";
 import { formatTime } from "@/lib/utils";
 import { act } from "@/lib/viz-actions";
 import { useVizStore } from "@/store/viz-store";
@@ -99,6 +99,7 @@ export function RecPill() {
   const elapsed = useVizStore((s) => s.recordElapsed);
   const format = useVizStore((s) => s.recordFormat);
   const autoOrbit = useVizStore((s) => s.autoOrbit);
+  const autoElevate = useVizStore((s) => s.autoElevate);
   const aspect = useVizStore((s) => s.videoAspect);
   const quality = useVizStore((s) => s.videoQuality);
   const videoFps = useVizStore((s) => s.videoFps);
@@ -131,6 +132,16 @@ export function RecPill() {
         >
           {t("record.circle")}
         </button>
+        <button
+          type="button"
+          data-hint={autoElevate ? t("record.liftOn") : t("record.liftOff")}
+          onClick={() => act((engine) => engine.setAutoElevate(!autoElevate))}
+          className={`h-9 rounded-md px-2.5 text-xs font-medium ${
+            autoElevate ? "bg-fg/10 text-primary" : "text-muted hover:bg-fg/10 hover:text-fg"
+          }`}
+        >
+          {t("record.lift")}
+        </button>
         <IconBtn
           label={t("record.stop")}
           hint={t("record.stopHint")}
@@ -149,7 +160,11 @@ export function CircleCameraSection() {
   const autoOrbit = useVizStore((s) => s.autoOrbit);
   const speed = useVizStore((s) => s.autoOrbitSpeed);
   const dir = useVizStore((s) => s.autoOrbitDir);
+  const autoElevate = useVizStore((s) => s.autoElevate);
+  const liftSpeed = useVizStore((s) => s.autoElevateSpeed);
+  const liftDir = useVizStore((s) => s.autoElevateDir);
   const period = Math.round(60 / Math.max(0.05, speed));
+  const liftPeriod = Math.round(30 / Math.max(0.05, liftSpeed));
 
   return (
     <div className="space-y-1">
@@ -177,6 +192,31 @@ export function CircleCameraSection() {
         value={speed}
         display={t("mix.circleSpeedDisplay", { speed: speed.toFixed(2), period })}
         onChange={(value) => act((engine) => engine.setAutoOrbitSpeed(value))}
+      />
+      <ToggleRow
+        label={t("mix.liftCam")}
+        hint={t("mix.liftCamHint")}
+        checked={autoElevate}
+        onChange={(value) => act((engine) => engine.setAutoElevate(value))}
+      />
+      <Segmented<ElevateDir>
+        label={t("mix.liftDir")}
+        value={liftDir}
+        options={[
+          { id: "up", label: t("mix.liftUp"), hint: t("mix.liftUpHint") },
+          { id: "down", label: t("mix.liftDown"), hint: t("mix.liftDownHint") },
+        ]}
+        onChange={(value) => act((engine) => engine.setAutoElevateDir(value))}
+      />
+      <RangeField
+        label={t("mix.liftSpeed")}
+        hint={t("mix.liftSpeedHint")}
+        min={0.15}
+        max={2.5}
+        step={0.05}
+        value={liftSpeed}
+        display={t("mix.liftSpeedDisplay", { speed: liftSpeed.toFixed(2), period: liftPeriod })}
+        onChange={(value) => act((engine) => engine.setAutoElevateSpeed(value))}
       />
     </div>
   );
