@@ -123,7 +123,7 @@ export class AudioManager {
     this.revokeCurrent();
     this.audio.src = track.src;
     this.audio.load();
-    this.trackName = `${track.title} — ${track.composer}`;
+    this.trackName = `${track.title.en} — ${track.composer.en}`;
     this.trackId = track.id;
     this.hasTrack = true;
     this.kickAnalysis();

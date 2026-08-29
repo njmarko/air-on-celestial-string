@@ -1,7 +1,7 @@
-import { a as fpsValue, c as EMPTY_NOTE, i as exportSize, l as note, n as CaptureSession, o as stampFilename, r as downloadBlob, s as formatTime, u as libraryTrack } from "./routes-NQuUc6bE.mjs";
-import { A as RepeatWrapping, B as Timer, C as MeshBasicMaterial, D as Points, E as PointLight, F as SphereGeometry, H as Vector3, I as Sprite, L as SpriteMaterial, M as SRGBColorSpace, N as Scene, O as PointsMaterial, P as ShaderMaterial, R as Texture, S as Mesh, T as PerspectiveCamera, V as Vector2, _ as ClampToEdgeWrapping, a as LineMaterial, c as OutputPass, d as OrbitControls, f as WebGLRenderer, g as CanvasTexture, h as BufferGeometry, i as LineSegmentsGeometry, j as RingGeometry, k as Raycaster, l as FXAAPass, m as BufferAttribute, n as LineGeometry, o as UnrealBloomPass, p as AmbientLight, r as LineSegments2, s as RenderPass, t as Line2, u as EffectComposer, v as Color, w as MeshStandardMaterial, x as MathUtils, y as Group, z as TextureLoader } from "../_libs/three.mjs";
+import { a as fpsValue, c as EMPTY_NOTE, i as exportSize, l as note, n as CaptureSession, o as stampFilename, r as downloadBlob, s as formatTime, u as libraryTrack } from "./routes-Y73NeSQY.mjs";
+import { A as RepeatWrapping, B as TextureLoader, C as MeshBasicMaterial, D as Points, E as PointLight, F as SphereGeometry, H as Vector2, I as Spherical, L as Sprite, M as SRGBColorSpace, N as Scene, O as PointsMaterial, P as ShaderMaterial, R as SpriteMaterial, S as Mesh, T as PerspectiveCamera, U as Vector3, V as Timer, _ as ClampToEdgeWrapping, a as LineMaterial, c as OutputPass, d as OrbitControls, f as WebGLRenderer, g as CanvasTexture, h as BufferGeometry, i as LineSegmentsGeometry, j as RingGeometry, k as Raycaster, l as FXAAPass, m as BufferAttribute, n as LineGeometry, o as UnrealBloomPass, p as AmbientLight, r as LineSegments2, s as RenderPass, t as Line2, u as EffectComposer, v as Color, w as MeshStandardMaterial, x as MathUtils, y as Group, z as Texture } from "../_libs/three.mjs";
 import { t as configureTexture } from "./texture-pack-BaRlWae6.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/scene-manager-Bs2QSkC4.js
+//#region node_modules/.nitro/vite/services/ssr/assets/scene-manager-BqbPoM1M.js
 function writeString(view, offset, value) {
 	for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
 }
@@ -898,7 +898,7 @@ var AudioManager = class {
 		this.revokeCurrent();
 		this.audio.src = track.src;
 		this.audio.load();
-		this.trackName = `${track.title} — ${track.composer}`;
+		this.trackName = `${track.title.en} — ${track.composer.en}`;
 		this.trackId = track.id;
 		this.hasTrack = true;
 		this.kickAnalysis();
@@ -2533,6 +2533,9 @@ var SceneManager = class {
 	autoOrbit = false;
 	autoOrbitSpeed = .5;
 	autoOrbitDir = "ccw";
+	autoElevate = false;
+	autoElevateSpeed = .5;
+	autoElevateDir = "down";
 	recording = false;
 	recordNote = EMPTY_NOTE;
 	videoAspect = "16:9";
@@ -2556,6 +2559,8 @@ var SceneManager = class {
 	capture = null;
 	exportFrame = null;
 	viewRestore = null;
+	liftOffset = new Vector3();
+	liftSpherical = new Spherical();
 	constructor(container, pack) {
 		this.container = container;
 		this.pack = pack ?? null;
@@ -2647,6 +2652,9 @@ var SceneManager = class {
 			autoOrbit: this.autoOrbit,
 			autoOrbitSpeed: this.autoOrbitSpeed,
 			autoOrbitDir: this.autoOrbitDir,
+			autoElevate: this.autoElevate,
+			autoElevateSpeed: this.autoElevateSpeed,
+			autoElevateDir: this.autoElevateDir,
 			recording: this.recording,
 			recordElapsed: this.capture?.elapsedSeconds() ?? 0,
 			recordNote: this.recordNote,
@@ -3083,10 +3091,32 @@ var SceneManager = class {
 		this.autoOrbitDir = dir;
 		this.applyOrbitSpin();
 	}
+	setAutoElevate(value) {
+		this.autoElevate = value;
+	}
+	setAutoElevateSpeed(value) {
+		this.autoElevateSpeed = Math.min(3, Math.max(.15, value));
+	}
+	setAutoElevateDir(dir) {
+		this.autoElevateDir = dir;
+	}
 	applyOrbitSpin() {
 		this.controls.autoRotate = this.autoOrbit;
 		const sign = this.autoOrbitDir === "ccw" ? 1 : -1;
 		this.controls.autoRotateSpeed = this.autoOrbitSpeed * sign;
+	}
+	applyVerticalMove(delta) {
+		if (!this.autoElevate || this.pointer.down) return;
+		this.liftOffset.subVectors(this.camera.position, this.controls.target);
+		this.liftSpherical.setFromVector3(this.liftOffset);
+		const sign = this.autoElevateDir === "up" ? -1 : 1;
+		const angle = 2 * Math.PI / 60 * this.autoElevateSpeed * delta * sign;
+		const min = this.controls.minPolarAngle + .08;
+		const max = this.controls.maxPolarAngle - .08;
+		this.liftSpherical.phi = MathUtils.clamp(this.liftSpherical.phi + angle, min, max);
+		this.liftOffset.setFromSpherical(this.liftSpherical);
+		this.camera.position.copy(this.controls.target).add(this.liftOffset);
+		this.camera.lookAt(this.controls.target);
 	}
 	setVideoAspect(aspect) {
 		this.videoAspect = aspect;
@@ -3272,6 +3302,7 @@ var SceneManager = class {
 		const delta = Math.min(this.timer.getDelta(), .1);
 		this.fps = MathUtils.lerp(this.fps, 1 / Math.max(delta, 1 / 240), .08);
 		this.controls.update();
+		this.applyVerticalMove(delta);
 		this.audio.followMix(this.audio.audio.currentTime || 0);
 		if (!this.paused) {
 			const simDelta = delta * this.speed;

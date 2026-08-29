@@ -19,11 +19,11 @@ export const en = {
   "credit.handleHint": "Open Marko Njegomir on X.",
 
   "intro.body":
-    "Real performances of Strauss, Mozart, Bach, and Beethoven — or add your own. Frequency bands stretch glowing strings between the worlds.",
+    "A hundred famous classical recordings — orchestra, piano, quartet — or add your own. Frequency bands stretch glowing strings between the worlds.",
   "intro.controls":
     "Click two planets, then Weave. Space plays. H hides the chrome. Hover any control for a hint.",
   "intro.credits":
-    "Worlds: Solar System Scope maps, CC BY 4.0 — the highest published size downloads in the background on first visit. Recordings: Musopen, Advent Chamber Orchestra, U.S. Air Force Band.",
+    "Worlds: Solar System Scope maps, CC BY 4.0 — the highest published size downloads in the background on first visit. Recordings: Musopen, U.S. Navy Band, U.S. Air Force Band, Wichita State, Advent Chamber Orchestra, Staatskapelle Berlin.",
   "intro.lighting": "Lighting the worlds…",
   "intro.lightingSky": "Lighting the sky",
 
@@ -308,7 +308,7 @@ export const en = {
   "player.seek": "Seek",
   "player.seekHint": "Scrub the recording. Mix sliders follow the section under the playhead.",
   "player.library": "Choose a track",
-  "player.libraryHint": "Pick a public-domain recording or add your own.",
+  "player.libraryHint": "Search a hundred public-domain recordings, or add your own.",
   "player.pauseOrbits": "Pause orbits",
   "player.resumeOrbits": "Resume orbits",
   "player.pauseOrbitsHint": "Freeze planetary motion. Music still plays.",
@@ -318,20 +318,12 @@ export const en = {
   "track.none": "No track loaded",
   "track.add": "Add a track",
   "track.addHint": "Open a file from your device — MP3, WAV, FLAC, and similar.",
-  "track.playHint": "Play {title} by {composer}. {credit}.",
+  "track.playHint": "Play {title} by {composer}. {credit}. {duration}.",
   "track.generated": "The Blue Danube — generated",
-  "track.danube.title": "The Blue Danube",
-  "track.danube.composer": "Johann Strauss II",
-  "track.danube.detail": "Op. 314 · orchestra",
-  "track.nachtmusik.title": "Eine kleine Nachtmusik",
-  "track.nachtmusik.composer": "W. A. Mozart",
-  "track.nachtmusik.detail": "K. 525 · I. Allegro",
-  "track.air.title": "Air on the G String",
-  "track.air.composer": "J. S. Bach",
-  "track.air.detail": "from Orchestral Suite No. 3",
-  "track.moonlight.title": "Moonlight Sonata",
-  "track.moonlight.composer": "Ludwig van Beethoven",
-  "track.moonlight.detail": "Op. 27 No. 2 · I. Adagio",
+  "track.search": "Search the library",
+  "track.searchHint": "Filter by title, composer, or work — English or Serbian.",
+  "track.nTracks": "{n}",
+  "track.noMatch": "No recordings match that search.",
 
   "error.title": "Something went wrong",
   "error.body": "An unexpected error occurred. Try reloading the page.",

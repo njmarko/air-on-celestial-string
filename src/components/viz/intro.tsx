@@ -24,7 +24,7 @@ export function IntroCard({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-4">
-      <div className="intro-card pointer-events-auto max-h-dvh w-full max-w-lg overflow-y-auto rounded-3xl p-6 md:p-8">
+      <div className="intro-card pointer-events-auto max-h-dvh w-full max-w-xl overflow-y-auto rounded-3xl p-6 md:p-8">
         <div className="mb-4 flex justify-center">
           <LanguagePicker />
         </div>
@@ -37,7 +37,7 @@ export function IntroCard({
           {t("app.titleTail")}
         </h1>
         <MakerCredit className="mt-3 text-center" />
-        <p className="mx-auto mt-4 max-w-sm text-center text-sm leading-relaxed text-muted">
+        <p className="mx-auto mt-4 max-w-md text-center text-sm leading-relaxed text-muted">
           {t("intro.body")}
         </p>
         <div className="mt-6 rounded-2xl bg-surface-2/80 p-2">

@@ -15,7 +15,7 @@ var __exportAll = (all, no_symbols) => {
 	return target;
 };
 //#endregion
-//#region node_modules/.nitro/vite/services/ssr/assets/router-CnfN0y8V.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-DaseX9aw.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 /**
@@ -45,9 +45,9 @@ var LANGUAGES = [{
 		"credit.madeBy": "Made by",
 		"credit.withGrok": "with Grok",
 		"credit.handleHint": "Open Marko Njegomir on X.",
-		"intro.body": "Real performances of Strauss, Mozart, Bach, and Beethoven — or add your own. Frequency bands stretch glowing strings between the worlds.",
+		"intro.body": "A hundred famous classical recordings — orchestra, piano, quartet — or add your own. Frequency bands stretch glowing strings between the worlds.",
 		"intro.controls": "Click two planets, then Weave. Space plays. H hides the chrome. Hover any control for a hint.",
-		"intro.credits": "Worlds: Solar System Scope maps, CC BY 4.0 — the highest published size downloads in the background on first visit. Recordings: Musopen, Advent Chamber Orchestra, U.S. Air Force Band.",
+		"intro.credits": "Worlds: Solar System Scope maps, CC BY 4.0 — the highest published size downloads in the background on first visit. Recordings: Musopen, U.S. Navy Band, U.S. Air Force Band, Wichita State, Advent Chamber Orchestra, Staatskapelle Berlin.",
 		"intro.lighting": "Lighting the worlds…",
 		"intro.lightingSky": "Lighting the sky",
 		"canvas.hint": "Click a world to select it. Two selected worlds can be woven into a string. Drag to orbit the camera.",
@@ -193,6 +193,16 @@ var LANGUAGES = [{
 		"mix.circleSpeed": "Circle speed",
 		"mix.circleSpeedHint": "How fast the camera circles the sun. 0.50 is a slow two-minute orbit.",
 		"mix.circleSpeedDisplay": "{speed} · {period}s / orbit",
+		"mix.liftCam": "Lift camera",
+		"mix.liftCamHint": "Glide the camera up or down around the sun. Works together with circle camera, including while recording.",
+		"mix.liftDir": "Lift direction",
+		"mix.liftUp": "Up",
+		"mix.liftUpHint": "Rise toward the north of the solar system.",
+		"mix.liftDown": "Down",
+		"mix.liftDownHint": "Descend toward the south of the solar system.",
+		"mix.liftSpeed": "Lift speed",
+		"mix.liftSpeedHint": "How fast the camera rises or drops. Independent of circle speed.",
+		"mix.liftSpeedDisplay": "{speed} · {period}s pole to pole",
 		"band.toggleHint": "Turn {name} on or off. Off, strings on this channel stay quiet.",
 		"band.playing": "playing",
 		"band.quiet": "quiet",
@@ -253,6 +263,9 @@ var LANGUAGES = [{
 		"record.circle": "Circle",
 		"record.circleOn": "Stop circling the sun. You can still drag the camera.",
 		"record.circleOff": "Let the camera slowly circle the sun. You can still drag to look around.",
+		"record.lift": "Lift",
+		"record.liftOn": "Stop the camera from rising or dropping. Circle can keep going.",
+		"record.liftOff": "Let the camera rise or drop. Works together with circling.",
 		"record.exportHint": "Record the sky and the music. Menus and the cursor stay out of the file. You can drag the camera while it records.",
 		"record.noSupport": "This browser cannot record video.",
 		"record.canvasProtected": "Could not capture the sky — the canvas is protected.",
@@ -287,7 +300,7 @@ var LANGUAGES = [{
 		"player.seek": "Seek",
 		"player.seekHint": "Scrub the recording. Mix sliders follow the section under the playhead.",
 		"player.library": "Choose a track",
-		"player.libraryHint": "Pick a public-domain recording or add your own.",
+		"player.libraryHint": "Search a hundred public-domain recordings, or add your own.",
 		"player.pauseOrbits": "Pause orbits",
 		"player.resumeOrbits": "Resume orbits",
 		"player.pauseOrbitsHint": "Freeze planetary motion. Music still plays.",
@@ -296,20 +309,12 @@ var LANGUAGES = [{
 		"track.none": "No track loaded",
 		"track.add": "Add a track",
 		"track.addHint": "Open a file from your device — MP3, WAV, FLAC, and similar.",
-		"track.playHint": "Play {title} by {composer}. {credit}.",
+		"track.playHint": "Play {title} by {composer}. {credit}. {duration}.",
 		"track.generated": "The Blue Danube — generated",
-		"track.danube.title": "The Blue Danube",
-		"track.danube.composer": "Johann Strauss II",
-		"track.danube.detail": "Op. 314 · orchestra",
-		"track.nachtmusik.title": "Eine kleine Nachtmusik",
-		"track.nachtmusik.composer": "W. A. Mozart",
-		"track.nachtmusik.detail": "K. 525 · I. Allegro",
-		"track.air.title": "Air on the G String",
-		"track.air.composer": "J. S. Bach",
-		"track.air.detail": "from Orchestral Suite No. 3",
-		"track.moonlight.title": "Moonlight Sonata",
-		"track.moonlight.composer": "Ludwig van Beethoven",
-		"track.moonlight.detail": "Op. 27 No. 2 · I. Adagio",
+		"track.search": "Search the library",
+		"track.searchHint": "Filter by title, composer, or work — English or Serbian.",
+		"track.nTracks": "{n}",
+		"track.noMatch": "No recordings match that search.",
 		"error.title": "Something went wrong",
 		"error.body": "An unexpected error occurred. Try reloading the page."
 	}
@@ -334,9 +339,9 @@ var LANGUAGES = [{
 		"credit.madeBy": "Направио",
 		"credit.withGrok": "уз Grok",
 		"credit.handleHint": "Отвори профил Марка Његомира на X-у.",
-		"intro.body": "Праве изведбе Штрауса, Моцарта, Баха и Бетовена — или додајте своју. Фреквенцијски опсези растежу светлеће струне међу световима.",
+		"intro.body": "Сто чувених класичних снимака — оркестар, клавир, квартет — или додајте свој. Фреквенцијски опсези растежу светлеће струне међу световима.",
 		"intro.controls": "Кликните на две планете, затим Сплети. Размак пушта музику. H скрива панеле. Задржите курсор за савет.",
-		"intro.credits": "Светови: мапе Solar System Scope, CC BY 4.0 — највећа објављена величина се преузима у позадини при првој посети. Снимци: Musopen, Advent Chamber Orchestra, У. С. Air Force Band.",
+		"intro.credits": "Светови: мапе Solar System Scope, CC BY 4.0 — највећа објављена величина се преузима у позадини при првој посети. Снимци: Musopen, У. С. Navy Band, У. С. Air Force Band, Wichita State, Advent Chamber Orchestra, Staatskapelle Berlin.",
 		"intro.lighting": "Пале се светови…",
 		"intro.lightingSky": "Пали се небо",
 		"canvas.hint": "Кликните свет да га изаберете. Два изабрана света могу се сплести у струну. Превуците да окренете камеру.",
@@ -482,6 +487,16 @@ var LANGUAGES = [{
 		"mix.circleSpeed": "Брзина кружења",
 		"mix.circleSpeedHint": "Колико брзо камера кружи око Сунца. 0,50 је спора орбита од два минута.",
 		"mix.circleSpeedDisplay": "{speed} · {period}s / орбита",
+		"mix.liftCam": "Подизање камере",
+		"mix.liftCamHint": "Камера се пење или спушта око Сунца. Ради заједно са кружном камером, и током снимања.",
+		"mix.liftDir": "Смер подизања",
+		"mix.liftUp": "Горе",
+		"mix.liftUpHint": "Пењи се ка северу Сунчевог система.",
+		"mix.liftDown": "Доле",
+		"mix.liftDownHint": "Спуштај се ка југу Сунчевог система.",
+		"mix.liftSpeed": "Брзина подизања",
+		"mix.liftSpeedHint": "Колико брзо камера расте или пада. Независно од брзине кружења.",
+		"mix.liftSpeedDisplay": "{speed} · {period}s од пола до пола",
 		"band.toggleHint": "Укључи или искључи {name}. Искључено, струне на овом каналу ћуте.",
 		"band.playing": "свира",
 		"band.quiet": "тихо",
@@ -542,6 +557,9 @@ var LANGUAGES = [{
 		"record.circle": "Кружи",
 		"record.circleOn": "Престани да кружиш око Сунца. И даље можете да померате камеру.",
 		"record.circleOff": "Нека камера полако кружи око Сунца. И даље можете да превучете поглед.",
+		"record.lift": "Висина",
+		"record.liftOn": "Престани да подижеш или спушташ камеру. Кружење може да настави.",
+		"record.liftOff": "Нека камера расте или пада. Ради заједно са кружењем.",
 		"record.exportHint": "Сними небо и музику. Менији и курсор остају ван фајла. Камеру можете да померате док снима.",
 		"record.noSupport": "Овај прегледач не уме да снима видео.",
 		"record.canvasProtected": "Небо није могло да се сними — платно је заштићено.",
@@ -576,7 +594,7 @@ var LANGUAGES = [{
 		"player.seek": "Позиција",
 		"player.seekHint": "Превуците снимак. Клизачи микса прате одељак испод главе.",
 		"player.library": "Изабери снимак",
-		"player.libraryHint": "Изаберите снимак из јавног домена или додајте свој.",
+		"player.libraryHint": "Претражите сто снимака из јавног домена, или додајте свој.",
 		"player.pauseOrbits": "Паузирај орбите",
 		"player.resumeOrbits": "Настави орбите",
 		"player.pauseOrbitsHint": "Замрзни кретање планета. Музика и даље свира.",
@@ -585,20 +603,12 @@ var LANGUAGES = [{
 		"track.none": "Нема учитаног снимка",
 		"track.add": "Додај снимак",
 		"track.addHint": "Отвори фајл са уређаја — MP3, WAV, FLAC и слично.",
-		"track.playHint": "Пусти {title} од {composer}. {credit}.",
+		"track.playHint": "Пусти {title} од {composer}. {credit}. {duration}.",
 		"track.generated": "Плави Дунав — генерисано",
-		"track.danube.title": "Плави Дунав",
-		"track.danube.composer": "Јохан Штраус II",
-		"track.danube.detail": "Op. 314 · оркестар",
-		"track.nachtmusik.title": "Мала ноћна музика",
-		"track.nachtmusik.composer": "В. А. Моцарт",
-		"track.nachtmusik.detail": "K. 525 · I. Allegro",
-		"track.air.title": "Арија на Г струни",
-		"track.air.composer": "Ј. С. Бах",
-		"track.air.detail": "из Оркестарске свите бр. 3",
-		"track.moonlight.title": "Месечева соната",
-		"track.moonlight.composer": "Лудвиг ван Бетовен",
-		"track.moonlight.detail": "Op. 27 бр. 2 · I. Adagio",
+		"track.search": "Претражи библиотеку",
+		"track.searchHint": "Филтрирајте по наслову, композитору или делу — енглески или српски.",
+		"track.nTracks": "{n}",
+		"track.noMatch": "Нема снимака за ту претрагу.",
 		"error.title": "Нешто није у реду",
 		"error.body": "Дошло је до неочекиване грешке. Покушајте да освежите страницу."
 	}
@@ -934,7 +944,7 @@ function PreviewHostBridge() {
 	}, [router]);
 	return null;
 }
-var styles_default = "/assets/styles-88GfXEvR.css";
+var styles_default = "/assets/styles-Dmwc_SKO.css";
 var APP_NAME = "Air on Celestial Strings";
 var Route$1 = createRootRoute({
 	head: () => ({
@@ -988,7 +998,7 @@ var Route$1 = createRootRoute({
 		})]
 	})
 });
-var $$splitComponentImporter = () => import("./routes-NQuUc6bE.mjs").then((n) => n.t);
+var $$splitComponentImporter = () => import("./routes-Y73NeSQY.mjs").then((n) => n.t);
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({
 	id: "/",
 	path: "/",

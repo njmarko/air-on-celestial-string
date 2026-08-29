@@ -1,5 +1,5 @@
-import { u as __exportAll } from "./router-CnfN0y8V.mjs";
-import { A as RepeatWrapping, M as SRGBColorSpace, _ as ClampToEdgeWrapping, b as LinearFilter, z as TextureLoader } from "../_libs/three.mjs";
+import { u as __exportAll } from "./router-DaseX9aw.mjs";
+import { A as RepeatWrapping, B as TextureLoader, M as SRGBColorSpace, _ as ClampToEdgeWrapping, b as LinearFilter } from "../_libs/three.mjs";
 //#region node_modules/.nitro/vite/services/ssr/assets/texture-pack-BaRlWae6.js
 var texture_pack_exports = /* @__PURE__ */ __exportAll({
 	configureTexture: () => configureTexture,

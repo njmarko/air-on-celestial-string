@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { ListMusic, Orbit, Pause, Play, Video, Volume2, VolumeX } from "lucide-react";
+import { libraryTrack, trackText } from "@/lib/celestial/library";
 import { formatTime } from "@/lib/utils";
 import { act } from "@/lib/viz-actions";
-import { useT } from "@/i18n/use-i18n";
+import { useLocale, useT } from "@/i18n/use-i18n";
 import { useVizStore } from "@/store/viz-store";
 import { ExportFields } from "./export";
 import { TrackList } from "./track-list";
@@ -10,16 +11,16 @@ import { IconBtn } from "./widgets";
 
 function trackLabel(
   t: ReturnType<typeof useT>,
+  locale: ReturnType<typeof useLocale>,
   trackId: string,
   trackName: string,
 ): string {
   if (!trackId) return t("track.none");
   if (trackId === "file") return trackName;
   if (trackId === "generated") return t("track.generated");
-  const title = t(`track.${trackId}.title`);
-  const composer = t(`track.${trackId}.composer`);
-  if (title.startsWith("track.")) return trackName;
-  return `${title} — ${composer}`;
+  const track = libraryTrack(trackId);
+  if (!track) return trackName;
+  return `${trackText(track, locale, "title")} — ${trackText(track, locale, "composer")}`;
 }
 
 export function Transport({
@@ -30,6 +31,7 @@ export function Transport({
   onOpenSheet: () => void;
 }) {
   const t = useT();
+  const locale = useLocale();
   const audio = useVizStore((s) => s.audio);
   const paused = useVizStore((s) => s.paused);
   const canCreate = useVizStore((s) => s.canCreate);
@@ -40,7 +42,7 @@ export function Transport({
 
   const progress = audio.duration > 0 ? audio.current / audio.duration : 0;
   const muted = audio.muted || audio.volume <= 0.001;
-  const name = trackLabel(t, audio.trackId, audio.trackName);
+  const name = trackLabel(t, locale, audio.trackId, audio.trackName);
 
   return (
     <footer className="pointer-events-auto relative w-full max-w-3xl">

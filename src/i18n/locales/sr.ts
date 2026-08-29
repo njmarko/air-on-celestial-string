@@ -21,11 +21,11 @@ export const sr: Messages = {
   "credit.handleHint": "Отвори профил Марка Његомира на X-у.",
 
   "intro.body":
-    "Праве изведбе Штрауса, Моцарта, Баха и Бетовена — или додајте своју. Фреквенцијски опсези растежу светлеће струне међу световима.",
+    "Сто чувених класичних снимака — оркестар, клавир, квартет — или додајте свој. Фреквенцијски опсези растежу светлеће струне међу световима.",
   "intro.controls":
     "Кликните на две планете, затим Сплети. Размак пушта музику. H скрива панеле. Задржите курсор за савет.",
   "intro.credits":
-    "Светови: мапе Solar System Scope, CC BY 4.0 — највећа објављена величина се преузима у позадини при првој посети. Снимци: Musopen, Advent Chamber Orchestra, У. С. Air Force Band.",
+    "Светови: мапе Solar System Scope, CC BY 4.0 — највећа објављена величина се преузима у позадини при првој посети. Снимци: Musopen, У. С. Navy Band, У. С. Air Force Band, Wichita State, Advent Chamber Orchestra, Staatskapelle Berlin.",
   "intro.lighting": "Пале се светови…",
   "intro.lightingSky": "Пали се небо",
 
@@ -310,7 +310,7 @@ export const sr: Messages = {
   "player.seek": "Позиција",
   "player.seekHint": "Превуците снимак. Клизачи микса прате одељак испод главе.",
   "player.library": "Изабери снимак",
-  "player.libraryHint": "Изаберите снимак из јавног домена или додајте свој.",
+  "player.libraryHint": "Претражите сто снимака из јавног домена, или додајте свој.",
   "player.pauseOrbits": "Паузирај орбите",
   "player.resumeOrbits": "Настави орбите",
   "player.pauseOrbitsHint": "Замрзни кретање планета. Музика и даље свира.",
@@ -320,20 +320,12 @@ export const sr: Messages = {
   "track.none": "Нема учитаног снимка",
   "track.add": "Додај снимак",
   "track.addHint": "Отвори фајл са уређаја — MP3, WAV, FLAC и слично.",
-  "track.playHint": "Пусти {title} од {composer}. {credit}.",
+  "track.playHint": "Пусти {title} од {composer}. {credit}. {duration}.",
   "track.generated": "Плави Дунав — генерисано",
-  "track.danube.title": "Плави Дунав",
-  "track.danube.composer": "Јохан Штраус II",
-  "track.danube.detail": "Op. 314 · оркестар",
-  "track.nachtmusik.title": "Мала ноћна музика",
-  "track.nachtmusik.composer": "В. А. Моцарт",
-  "track.nachtmusik.detail": "K. 525 · I. Allegro",
-  "track.air.title": "Арија на Г струни",
-  "track.air.composer": "Ј. С. Бах",
-  "track.air.detail": "из Оркестарске свите бр. 3",
-  "track.moonlight.title": "Месечева соната",
-  "track.moonlight.composer": "Лудвиг ван Бетовен",
-  "track.moonlight.detail": "Op. 27 бр. 2 · I. Adagio",
+  "track.search": "Претражи библиотеку",
+  "track.searchHint": "Филтрирајте по наслову, композитору или делу — енглески или српски.",
+  "track.nTracks": "{n}",
+  "track.noMatch": "Нема снимака за ту претрагу.",
 
   "error.title": "Нешто није у реду",
   "error.body": "Дошло је до неочекиване грешке. Покушајте да освежите страницу.",

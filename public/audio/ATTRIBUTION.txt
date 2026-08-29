@@ -1,5 +1,7 @@
 Real performances (not MIDI). Compositions are in the public domain.
 
+Local copies
+------------
 The Blue Danube, Op. 314 — Johann Strauss II
 Musopen orchestra · CC0 1.0
 https://commons.wikimedia.org/wiki/File:Strauss,_An_der_schönen_blauen_Donau.ogg
@@ -15,3 +17,31 @@ https://commons.wikimedia.org/wiki/File:Air.ogg
 Moonlight Sonata, Op. 27 No. 2, I. Adagio — Ludwig van Beethoven
 Paul Pitman for Musopen · public domain
 https://commons.wikimedia.org/wiki/File:Ludwig_van_Beethoven_-_sonata_no._14_in_c_sharp_minor_'moonlight',_op._27_no._2_-_i._adagio_sostenuto.ogg
+
+Polovtsian Dances, Dance No. 8 from Prince Igor — Alexander Borodin
+Staatskapelle Berlin, Leo Blech · public domain (Public Domain Project)
+https://commons.wikimedia.org/wiki/File:PDP-CH_-_Staatskapelle_Berlin_-_Leo_Blech_-_Prince_Igor_-_Alexander_Borodin_-_Dance_No._8_-_Electrola-ej609-62-788.flac
+
+Further Musopen / European Archive performances (Beethoven 5, New World,
+Rachmaninoff 2, Holst Planets, 1812, Night on Bald Mountain, Carmen,
+Jesu Joy, Badinerie, Wedding March, Pathétique II, Emperor Waltz,
+Albinoni Adagio, Great Gate of Kiev, Swan Lake) were transcoded from
+Wikimedia Commons public-domain / CC0 / CC BY files into MP3 for browser
+playback. Source category:
+https://commons.wikimedia.org/wiki/Category:Musopen
+
+Streamed
+--------
+Musopen Symphony Orchestra, String Quartet, and Complete Chopin Collection
+(Internet Archive, CC0 / public domain)
+https://archive.org/details/MusopenCollectionAsFlac
+https://archive.org/details/musopen-chopin
+
+The Four Seasons — Antonio Vivaldi
+John Harrison with the Wichita State University Chamber Players · CC BY-SA 3.0
+https://archive.org/details/The_Four_Seasons_Vivaldi-10361
+
+Hungarian Rhapsody No. 2, Oberon, The Italian Girl in Algiers, The Wasps
+U.S. Navy Band · United States government work, public domain
+https://archive.org/details/LightCavalryOvertureAndOtherWarhorses
+https://archive.org/details/OvertureToTheWasps

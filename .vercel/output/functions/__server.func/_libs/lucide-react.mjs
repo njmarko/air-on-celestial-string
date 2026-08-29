@@ -309,6 +309,21 @@ var Plus = createLucideIcon("plus", [["path", {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
+var Search = createLucideIcon("search", [["path", {
+	d: "m21 21-4.34-4.34",
+	key: "14j7rj"
+}], ["circle", {
+	cx: "11",
+	cy: "11",
+	r: "8",
+	key: "4ej97u"
+}]]);
+/**
+* @license lucide-react v0.510.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
 var Square = createLucideIcon("square", [["rect", {
 	width: "18",
 	height: "18",
@@ -471,4 +486,4 @@ var X = createLucideIcon("x", [["path", {
 	key: "d8bk6v"
 }]]);
 //#endregion
-export { ListMusic as _, Upload as a, Square as c, Pause as d, Orbit as f, Lock as g, Maximize2 as h, Video as i, Plus as l, Minus as m, VolumeX as n, TriangleAlert as o, Music as p, Volume2 as r, Trash2 as s, X as t, Play as u, Eye as v, EyeOff as y };
+export { Lock as _, Upload as a, EyeOff as b, Square as c, Play as d, Pause as f, Maximize2 as g, Minus as h, Video as i, Search as l, Music as m, VolumeX as n, TriangleAlert as o, Orbit as p, Volume2 as r, Trash2 as s, X as t, Plus as u, ListMusic as v, Eye as y };
