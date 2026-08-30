@@ -707,7 +707,7 @@ export class SceneManager {
   }
 
   setAutoOrbitSpeed(value: number): void {
-    this.autoOrbitSpeed = Math.min(3, Math.max(0.15, value));
+    this.autoOrbitSpeed = Math.min(8, Math.max(0.15, value));
     this.applyOrbitSpin();
   }
 
@@ -721,7 +721,7 @@ export class SceneManager {
   }
 
   setAutoElevateSpeed(value: number): void {
-    this.autoElevateSpeed = Math.min(3, Math.max(0.15, value));
+    this.autoElevateSpeed = Math.min(8, Math.max(0.15, value));
   }
 
   setAutoElevateDir(dir: ElevateDir): void {

@@ -31,7 +31,7 @@ export class Connection {
   private col: Float32Array;
   private readonly _p1 = new THREE.Vector3();
   private readonly _p2 = new THREE.Vector3();
-  private readonly maxSegments = 4000;
+  private readonly maxSegments = 12000;
 
   constructor(scene: THREE.Scene, body1: CelestialBody, body2: CelestialBody, color = 0x88ffaa, width = 2) {
     this.scene = scene;

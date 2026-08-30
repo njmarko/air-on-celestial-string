@@ -187,7 +187,7 @@ export function CircleCameraSection() {
         label={t("mix.circleSpeed")}
         hint={t("mix.circleSpeedHint")}
         min={0.15}
-        max={2.5}
+        max={8}
         step={0.05}
         value={speed}
         display={t("mix.circleSpeedDisplay", { speed: speed.toFixed(2), period })}
@@ -212,7 +212,7 @@ export function CircleCameraSection() {
         label={t("mix.liftSpeed")}
         hint={t("mix.liftSpeedHint")}
         min={0.15}
-        max={2.5}
+        max={8}
         step={0.05}
         value={liftSpeed}
         display={t("mix.liftSpeedDisplay", { speed: liftSpeed.toFixed(2), period: liftPeriod })}
