@@ -9,7 +9,7 @@ export class OrbitPath {
   private geometry: LineGeometry;
   private material: LineMaterial;
 
-  constructor(host: THREE.Object3D, semiMajor: number, eccentricity = 0, color = 0x44aaff, width = 1.5) {
+  constructor(host: THREE.Object3D, semiMajor: number, eccentricity = 0, color = 0x44aaff, width = 2) {
     const points: THREE.Vector3[] = [];
     const segments = 256;
     for (let i = 0; i <= segments; i++) {

@@ -49,7 +49,7 @@ export class SceneManager {
   spinFactor = 0.01;
   linesPerSec = 6;
   trailDuration = 60;
-  pathWidth = 1.5;
+  pathWidth = 2;
   stringWidth = 2;
   orbitMode: OrbitMode = "realistic";
   background: BackgroundType = "milkyway";
@@ -93,9 +93,9 @@ export class SceneManager {
   autoElevateDir: ElevateDir = "down";
   recording = false;
   recordNote: LocNote = EMPTY_NOTE;
-  videoAspect: VideoAspect = "16:9";
-  videoQuality: VideoQuality = "1080";
-  videoFps: VideoFps = "30";
+  videoAspect: VideoAspect = "1:1";
+  videoQuality: VideoQuality = "2160";
+  videoFps: VideoFps = "60";
   antialias = true;
   private hiResBusy = false;
   private ultraComplete = false;
@@ -150,7 +150,7 @@ export class SceneManager {
     this.useBloom = !mobile;
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.02, 0.55, 0.18);
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.04, 0.55, 0.18);
     this.bloomPass.enabled = this.useBloom;
     this.composer.addPass(this.bloomPass);
     this.composer.addPass(new OutputPass());
