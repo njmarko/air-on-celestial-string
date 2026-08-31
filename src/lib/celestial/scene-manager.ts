@@ -843,7 +843,7 @@ export class SceneManager {
     if (!session) return;
     const result = await session.stop();
     if (!result) {
-      this.recordNote = note("record.nothing");
+      this.recordNote = session.note.key ? session.note : note("record.nothing");
       return;
     }
     const name = stampFilename(result.ext, this.audio.trackName);

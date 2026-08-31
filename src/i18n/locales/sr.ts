@@ -295,8 +295,10 @@ export const sr: Messages = {
   "record.noSky": "Небо није могло да се сними.",
   "record.formatMp4": "MP4",
   "record.formatWebm": "WebM — овај прегледач кодира WebM, не MP4",
-  "record.nothing": "Ништа није снимљено.",
+  "record.nothing": "Ништа није снимљено. Пробајте нижу резолуцију или 30 кадрова.",
   "record.startFailed": "Снимач није могао да се покрене.",
+  "record.encodeFailed":
+    "Овај прегледач није умео да кодира тај кадар. Пробајте 1080, или широки 16:9 кадар.",
   "record.saved": "Сачувано {name}",
   "record.aspect169": "Широки кадар — уобичајени рачунарски оквир.",
   "record.aspect916": "Уски кадар за приче и телефоне.",

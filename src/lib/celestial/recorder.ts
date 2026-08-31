@@ -22,12 +22,18 @@ const ASPECT: Record<VideoAspect, number> = {
   "4:3": 4 / 3,
 };
 
-const LONG_EDGE: Record<VideoQuality, number> = {
-  "720": 1280,
-  "1080": 1920,
-  "1440": 2560,
-  "2160": 3840,
+/** Short-edge pixels — matches the Mix labels (4K = 2160 tall for 16:9). */
+const SHORT_EDGE: Record<VideoQuality, number> = {
+  "720": 720,
+  "1080": 1080,
+  "1440": 1440,
+  "2160": 2160,
 };
+
+/** H.264 High@L5.1 frame-size cap (macroblocks) and a common hardware max edge. */
+const H264_MAX_MB = 36864;
+const H264_MAX_EDGE = 4096;
+const MIN_USEFUL_BYTES = 32_768;
 
 export const VIDEO_ASPECTS: { id: VideoAspect; label: string }[] = [
   { id: "16:9", label: "16:9" },
@@ -53,21 +59,49 @@ export function fpsValue(id: VideoFps): number {
   return id === "24" ? 24 : id === "60" ? 60 : 30;
 }
 
+function even(n: number): number {
+  return Math.max(2, Math.round(n / 2) * 2);
+}
+
+/**
+ * Scale a frame so H.264 hardware encoders will accept it.
+ * Level 5.1/5.2 max is 36864 macroblocks (~4096×2304). Long-edge 4K on 1:1
+ * (3840×3840) and 4:3 (3840×2880) overshoots that and yields empty ~3 KB files.
+ */
+export function fitEncodeSize(width: number, height: number): { width: number; height: number } {
+  let w = Math.max(2, width);
+  let h = Math.max(2, height);
+  const mb = Math.ceil(w / 16) * Math.ceil(h / 16);
+  let scale = 1;
+  const edge = Math.max(w, h);
+  if (edge > H264_MAX_EDGE) scale = Math.min(scale, H264_MAX_EDGE / edge);
+  if (mb > H264_MAX_MB) scale = Math.min(scale, Math.sqrt(H264_MAX_MB / mb));
+  if (scale < 1) {
+    w *= scale;
+    h *= scale;
+  }
+  w = even(w);
+  h = even(h);
+  while (w > 16 && h > 16 && Math.ceil(w / 16) * Math.ceil(h / 16) > H264_MAX_MB) {
+    w = even(w - 2);
+    h = even(h - 2);
+  }
+  return { width: w, height: h };
+}
+
 export function exportSize(aspect: VideoAspect, quality: VideoQuality): { width: number; height: number } {
-  const long = LONG_EDGE[quality];
+  const short = SHORT_EDGE[quality];
   const ratio = ASPECT[aspect];
   let width: number;
   let height: number;
   if (ratio >= 1) {
-    width = long;
-    height = Math.round(long / ratio);
+    height = short;
+    width = short * ratio;
   } else {
-    height = long;
-    width = Math.round(long * ratio);
+    width = short;
+    height = short / ratio;
   }
-  width = Math.round(width / 2) * 2;
-  height = Math.round(height / 2) * 2;
-  return { width, height };
+  return fitEncodeSize(width, height);
 }
 
 export function pickRecorderMime(withAudio: boolean): RecorderMime {
@@ -109,7 +143,7 @@ export function pickRecorderMime(withAudio: boolean): RecorderMime {
 
 export function videoBitrate(width: number, height: number, fps = 30): number {
   const fpsScale = Math.max(1, fps / 30);
-  return Math.min(80_000_000, Math.max(5_000_000, Math.round(width * height * 4 * fpsScale)));
+  return Math.min(60_000_000, Math.max(5_000_000, Math.round(width * height * 4 * fpsScale)));
 }
 
 export function downloadBlob(blob: Blob, filename: string): void {
@@ -140,6 +174,7 @@ export class CaptureSession {
   private recorder: MediaRecorder | null = null;
   private chunks: Blob[] = [];
   private canvasStream: MediaStream | null = null;
+  private encodeFailed = false;
 
   start(canvas: HTMLCanvasElement, audioStream: MediaStream, width: number, height: number, fps = 30): boolean {
     if (typeof MediaRecorder === "undefined") {
@@ -161,12 +196,11 @@ export class CaptureSession {
       return false;
     }
     if ("contentHint" in videoTrack) videoTrack.contentHint = "detail";
+    // Do not apply width/height constraints — canvas.captureStream already
+    // matches the drawing buffer. Ideal 3840×3840 / 2880×2160 is not a camera
+    // mode, and Chrome's encoder then writes an empty ~3 KB file.
     try {
-      void videoTrack.applyConstraints({
-        width: { ideal: width },
-        height: { ideal: height },
-        frameRate: { ideal: fps },
-      });
+      void videoTrack.applyConstraints({ frameRate: { ideal: fps } });
     } catch {
       /* constraints are best-effort */
     }
@@ -187,6 +221,7 @@ export class CaptureSession {
     this.canvasStream = canvasStream;
     this.recorder = recorder;
     this.chunks = [];
+    this.encodeFailed = false;
     this.ext = mimeExt(recorder.mimeType);
     this.mime = recorder.mimeType || (this.ext === "mp4" ? "video/mp4" : "video/webm");
     this.note = this.ext === "mp4" ? note("record.formatMp4") : note("record.formatWebm");
@@ -195,6 +230,10 @@ export class CaptureSession {
 
     recorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) this.chunks.push(event.data);
+    };
+    recorder.onerror = () => {
+      this.encodeFailed = true;
+      this.note = note("record.encodeFailed");
     };
 
     try {
@@ -228,16 +267,27 @@ export class CaptureSession {
         this.running = false;
         this.recorder = null;
         this.cleanupTracks();
+        if (this.encodeFailed) {
+          this.note = note("record.encodeFailed");
+          resolve(null);
+          return;
+        }
         if (this.chunks.length === 0) {
+          this.note = note("record.nothing");
           resolve(null);
           return;
         }
         const mime = this.mime || (this.ext === "mp4" ? "video/mp4" : "video/webm");
-        resolve({ blob: new Blob(this.chunks, { type: mime }), ext: this.ext, mime });
+        const blob = new Blob(this.chunks, { type: mime });
+        if (blob.size < MIN_USEFUL_BYTES) {
+          this.note = note("record.encodeFailed");
+          resolve(null);
+          return;
+        }
+        resolve({ blob, ext: this.ext, mime });
       };
 
       recorder.onstop = finish;
-      recorder.onerror = () => finish();
 
       try {
         if (recorder.state === "recording") {

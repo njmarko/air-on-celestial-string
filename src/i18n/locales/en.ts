@@ -293,8 +293,10 @@ export const en = {
   "record.noSky": "Could not capture the sky.",
   "record.formatMp4": "MP4",
   "record.formatWebm": "WebM — this browser encodes WebM, not MP4",
-  "record.nothing": "Nothing was captured.",
+  "record.nothing": "Nothing was captured. Try a lower resolution or 30 fps.",
   "record.startFailed": "Could not start the recorder.",
+  "record.encodeFailed":
+    "This browser could not encode that frame. Try 1080, or a 16:9 frame.",
   "record.saved": "Saved {name}",
   "record.aspect169": "Widescreen — the usual desktop frame.",
   "record.aspect916": "Tall frame for stories and phones.",
