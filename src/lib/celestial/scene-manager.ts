@@ -36,6 +36,7 @@ import type {
   VideoQuality,
   OrbitDir,
   ElevateDir,
+  ZoomDir,
   VizSnapshot,
 } from "./types";
 
@@ -91,6 +92,9 @@ export class SceneManager {
   autoElevate = false;
   autoElevateSpeed = 0.5;
   autoElevateDir: ElevateDir = "down";
+  autoZoom = false;
+  autoZoomSpeed = 0.5;
+  autoZoomDir: ZoomDir = "in";
   recording = false;
   recordNote: LocNote = EMPTY_NOTE;
   videoAspect: VideoAspect = "1:1";
@@ -111,6 +115,8 @@ export class SceneManager {
   private viewRestore: { width: number; height: number; pixelRatio: number } | null = null;
   private readonly liftOffset = new THREE.Vector3();
   private readonly liftSpherical = new THREE.Spherical();
+  private readonly zoomOffset = new THREE.Vector3();
+  private zoomRadius: number | null = null;
 
   constructor(container: HTMLElement, pack?: TexturePack) {
     this.container = container;
@@ -160,7 +166,8 @@ export class SceneManager {
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
+    this.controls.dampingFactor = 0.1;
+    this.controls.zoomSpeed = 0.4;
     this.controls.minDistance = 40;
     this.controls.maxDistance = 4200;
     this.controls.target.set(0, 0, 0);
@@ -218,6 +225,9 @@ export class SceneManager {
       autoElevate: this.autoElevate,
       autoElevateSpeed: this.autoElevateSpeed,
       autoElevateDir: this.autoElevateDir,
+      autoZoom: this.autoZoom,
+      autoZoomSpeed: this.autoZoomSpeed,
+      autoZoomDir: this.autoZoomDir,
       recording: this.recording,
       recordElapsed: this.capture?.elapsedSeconds() ?? 0,
       recordNote: this.recordNote,
@@ -728,6 +738,18 @@ export class SceneManager {
     this.autoElevateDir = dir;
   }
 
+  setAutoZoom(value: boolean): void {
+    this.autoZoom = value;
+  }
+
+  setAutoZoomSpeed(value: number): void {
+    this.autoZoomSpeed = Math.min(8, Math.max(0.15, value));
+  }
+
+  setAutoZoomDir(dir: ZoomDir): void {
+    this.autoZoomDir = dir;
+  }
+
   private applyOrbitSpin(): void {
     this.controls.autoRotate = this.autoOrbit;
     const sign = this.autoOrbitDir === "ccw" ? 1 : -1;
@@ -745,6 +767,34 @@ export class SceneManager {
     this.liftSpherical.phi = THREE.MathUtils.clamp(this.liftSpherical.phi + angle, min, max);
     this.liftOffset.setFromSpherical(this.liftSpherical);
     this.camera.position.copy(this.controls.target).add(this.liftOffset);
+    this.camera.lookAt(this.controls.target);
+  }
+
+  private applyZoomMove(delta: number): void {
+    this.zoomOffset.subVectors(this.camera.position, this.controls.target);
+    const live = this.zoomOffset.length();
+    if (live < 1e-4) return;
+    if (this.zoomRadius == null || !Number.isFinite(this.zoomRadius) || this.zoomRadius <= 0) {
+      this.zoomRadius = live;
+    }
+    const min = this.controls.minDistance;
+    const max = this.controls.maxDistance;
+    if (this.autoZoom && !this.pointer.down) {
+      const sign = this.autoZoomDir === "in" ? -1 : 1;
+      const logMin = Math.log(min);
+      const logMax = Math.log(max);
+      const logR = Math.log(THREE.MathUtils.clamp(this.zoomRadius, min, max));
+      this.zoomRadius = Math.exp(
+        THREE.MathUtils.clamp(logR + sign * ((logMax - logMin) / 60) * this.autoZoomSpeed * delta, logMin, logMax),
+      );
+    } else {
+      const ease = 1 - Math.exp(-10 * delta);
+      this.zoomRadius = THREE.MathUtils.lerp(this.zoomRadius, live, ease);
+    }
+    const radius = THREE.MathUtils.clamp(this.zoomRadius, min, max);
+    this.zoomRadius = radius;
+    this.zoomOffset.multiplyScalar(radius / live);
+    this.camera.position.copy(this.controls.target).add(this.zoomOffset);
     this.camera.lookAt(this.controls.target);
   }
 
@@ -947,6 +997,7 @@ export class SceneManager {
     this.fps = THREE.MathUtils.lerp(this.fps, 1 / Math.max(delta, 1 / 240), 0.08);
     this.controls.update();
     this.applyVerticalMove(delta);
+    this.applyZoomMove(delta);
     this.audio.followMix(this.audio.audio.currentTime || 0);
 
     if (!this.paused) {

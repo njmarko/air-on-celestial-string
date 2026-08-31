@@ -9,6 +9,7 @@ export type RhythmMode = "simple" | "advanced";
 export type MixStatus = "idle" | "analyzing" | "live" | "failed";
 export type OrbitDir = "ccw" | "cw";
 export type ElevateDir = "up" | "down";
+export type ZoomDir = "in" | "out";
 export type { VideoAspect, VideoFps, VideoQuality };
 
 export type PlanetDef = {
@@ -83,6 +84,9 @@ export type VizSnapshot = {
   autoElevate: boolean;
   autoElevateSpeed: number;
   autoElevateDir: ElevateDir;
+  autoZoom: boolean;
+  autoZoomSpeed: number;
+  autoZoomDir: ZoomDir;
   recording: boolean;
   recordElapsed: number;
   recordNote: LocNote;

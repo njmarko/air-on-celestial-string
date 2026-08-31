@@ -1,7 +1,7 @@
 import { Square } from "lucide-react";
 import { formatNote, useT } from "@/i18n/use-i18n";
 import { exportSize, fpsValue, VIDEO_ASPECTS, VIDEO_FPS, VIDEO_QUALITIES } from "@/lib/celestial/recorder";
-import type { ElevateDir, OrbitDir, VideoAspect, VideoFps, VideoQuality } from "@/lib/celestial/types";
+import type { ElevateDir, OrbitDir, VideoAspect, VideoFps, VideoQuality, ZoomDir } from "@/lib/celestial/types";
 import { formatTime } from "@/lib/utils";
 import { act } from "@/lib/viz-actions";
 import { useVizStore } from "@/store/viz-store";
@@ -100,6 +100,7 @@ export function RecPill() {
   const format = useVizStore((s) => s.recordFormat);
   const autoOrbit = useVizStore((s) => s.autoOrbit);
   const autoElevate = useVizStore((s) => s.autoElevate);
+  const autoZoom = useVizStore((s) => s.autoZoom);
   const aspect = useVizStore((s) => s.videoAspect);
   const quality = useVizStore((s) => s.videoQuality);
   const videoFps = useVizStore((s) => s.videoFps);
@@ -142,6 +143,16 @@ export function RecPill() {
         >
           {t("record.lift")}
         </button>
+        <button
+          type="button"
+          data-hint={autoZoom ? t("record.zoomOn") : t("record.zoomOff")}
+          onClick={() => act((engine) => engine.setAutoZoom(!autoZoom))}
+          className={`h-9 rounded-md px-2.5 text-xs font-medium ${
+            autoZoom ? "bg-fg/10 text-primary" : "text-muted hover:bg-fg/10 hover:text-fg"
+          }`}
+        >
+          {t("record.zoom")}
+        </button>
         <IconBtn
           label={t("record.stop")}
           hint={t("record.stopHint")}
@@ -163,8 +174,12 @@ export function CircleCameraSection() {
   const autoElevate = useVizStore((s) => s.autoElevate);
   const liftSpeed = useVizStore((s) => s.autoElevateSpeed);
   const liftDir = useVizStore((s) => s.autoElevateDir);
+  const autoZoom = useVizStore((s) => s.autoZoom);
+  const zoomSpeed = useVizStore((s) => s.autoZoomSpeed);
+  const zoomDir = useVizStore((s) => s.autoZoomDir);
   const period = Math.round(60 / Math.max(0.05, speed));
   const liftPeriod = Math.round(30 / Math.max(0.05, liftSpeed));
+  const zoomPeriod = Math.round(60 / Math.max(0.05, zoomSpeed));
 
   return (
     <div className="space-y-1">
@@ -217,6 +232,31 @@ export function CircleCameraSection() {
         value={liftSpeed}
         display={t("mix.liftSpeedDisplay", { speed: liftSpeed.toFixed(2), period: liftPeriod })}
         onChange={(value) => act((engine) => engine.setAutoElevateSpeed(value))}
+      />
+      <ToggleRow
+        label={t("mix.zoomCam")}
+        hint={t("mix.zoomCamHint")}
+        checked={autoZoom}
+        onChange={(value) => act((engine) => engine.setAutoZoom(value))}
+      />
+      <Segmented<ZoomDir>
+        label={t("mix.zoomDir")}
+        value={zoomDir}
+        options={[
+          { id: "in", label: t("mix.zoomIn"), hint: t("mix.zoomInHint") },
+          { id: "out", label: t("mix.zoomOut"), hint: t("mix.zoomOutHint") },
+        ]}
+        onChange={(value) => act((engine) => engine.setAutoZoomDir(value))}
+      />
+      <RangeField
+        label={t("mix.zoomSpeed")}
+        hint={t("mix.zoomSpeedHint")}
+        min={0.15}
+        max={8}
+        step={0.05}
+        value={zoomSpeed}
+        display={t("mix.zoomSpeedDisplay", { speed: zoomSpeed.toFixed(2), period: zoomPeriod })}
+        onChange={(value) => act((engine) => engine.setAutoZoomSpeed(value))}
       />
     </div>
   );

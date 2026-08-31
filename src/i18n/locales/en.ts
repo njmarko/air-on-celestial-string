@@ -199,6 +199,17 @@ export const en = {
   "mix.liftSpeed": "Lift speed",
   "mix.liftSpeedHint": "How fast the camera rises or drops. Independent of circle speed.",
   "mix.liftSpeedDisplay": "{speed} · {period}s pole to pole",
+  "mix.zoomCam": "Zoom camera",
+  "mix.zoomCamHint":
+    "Glide the camera in or out from the sun. Works together with circle and lift, including while recording.",
+  "mix.zoomDir": "Zoom direction",
+  "mix.zoomIn": "In",
+  "mix.zoomInHint": "Move the camera closer to the sun.",
+  "mix.zoomOut": "Out",
+  "mix.zoomOutHint": "Move the camera farther from the sun.",
+  "mix.zoomSpeed": "Zoom speed",
+  "mix.zoomSpeedHint": "How fast the camera zooms. Independent of circle and lift speed.",
+  "mix.zoomSpeedDisplay": "{speed} · {period}s near to far",
 
   "band.toggleHint": "Turn {name} on or off. Off, strings on this channel stay quiet.",
   "band.playing": "playing",
@@ -272,6 +283,9 @@ export const en = {
   "record.lift": "Lift",
   "record.liftOn": "Stop the camera from rising or dropping. Circle can keep going.",
   "record.liftOff": "Let the camera rise or drop. Works together with circling.",
+  "record.zoom": "Zoom",
+  "record.zoomOn": "Stop the camera from zooming. Circle and lift can keep going.",
+  "record.zoomOff": "Let the camera zoom in or out. Works together with circling and lift.",
   "record.exportHint":
     "Record the sky and the music. Menus and the cursor stay out of the file. You can drag the camera while it records.",
   "record.noSupport": "This browser cannot record video.",
